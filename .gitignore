@@ -1,0 +1,12 @@
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local AI/project metadata
+.atl/
+
+# Internal source material not needed for the review deploy
+docs/
+design-spec.md
