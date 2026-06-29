@@ -10,6 +10,7 @@ Scapder is a technical AI/data-intelligence company. The landing should feel pre
 **Content reference:** `docs/Scapder_Overview.pdf` and repo-provided Scapder documents.
 **Primary language:** Spanish.
 **Secondary language:** English via header selector.
+**Tertiary language:** Portuguese (Brazil) via header selector.
 
 ## Source Hierarchy
 1. User decisions in the current session.
@@ -82,7 +83,7 @@ Recommended marketing structure:
 5. Product ecosystem: Edge Sight AI, Sentientum, ML Spec if validated from PDF.
 6. Edge Sight AI spotlight/demo: detection/heatmap/security intelligence using existing realistic camera assets only where relevant.
 7. Process/capability model: how Scapder turns data into intelligence.
-8. Contact/final CTA.
+8. Contact/final CTA with a form that launches email and WhatsApp actions.
 9. Footer: company/product/legal/contact.
 
 ## Copy Rules
