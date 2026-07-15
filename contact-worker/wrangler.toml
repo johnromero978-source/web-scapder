@@ -1,0 +1,15 @@
+name = "scapder-contact"
+main = "src/worker.mjs"
+compatibility_date = "2026-07-14"
+
+[vars]
+ALLOWED_ORIGINS = "https://scapder.com,https://www.scapder.com"
+CONTACT_FROM_EMAIL = "contact@send.scapder.com"
+
+[[ratelimits]]
+name = "CONTACT_RATE_LIMITER"
+namespace_id = "1001"
+
+[ratelimits.simple]
+limit = 5
+period = 60

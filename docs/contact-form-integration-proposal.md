@@ -1,40 +1,33 @@
-# Contact form integration proposal
+# Contact form integration
 
 Goal: make the contact form truly functional without pretending GitHub Pages has a backend.
 
-## Current state
+## Implemented local architecture
 
-- The form is static.
-- Visitor actions open email or WhatsApp from the visitor device.
-- This is useful for a lightweight landing page, but it is not real server-side delivery.
+- GitHub Pages remains the static landing host.
+- The form submits JSON to a configurable Cloudflare `workers.dev` endpoint.
+- The Worker validates requests and calls the Resend REST API.
+- Recipients, sender configuration, and credentials stay server-side.
 
-## Recommendation
+## Configuration boundary
 
 | Area | Decision |
 | --- | --- |
-| Email | Add a small serverless endpoint or lightweight API and send messages through a provider such as Resend. |
-| WhatsApp | Keep the prefilled WhatsApp flow for now. |
-| Later WhatsApp | Consider WhatsApp Cloud API or Twilio only if approved and the business case justifies it. |
+| Public landing | Worker endpoint URL only. |
+| Worker variables | Exact allowed origins and verified sender. |
+| Worker secrets | Resend API key and comma-separated recipients. |
 
-## Why not now
+## Privacy and abuse baseline
 
-- GitHub Pages does not provide a backend.
-- WhatsApp automation has Business/API/template constraints.
-- Adding full automation now increases setup, approvals, and operational risk.
+- Explicit consent is required before submission.
+- The concise notice is provisional and identifies `haroldsthid@scapder.com` for privacy inquiries in the Colombia/Law 1581 of 2012 context. It does not claim complete compliance while responsible-party identity and phone details remain unavailable.
+- Cloudflare's server-side Rate Limiting binding limits requests per client IP before delivery.
+- Honeypot, minimum submission age, strict validation, body limits, and exact-origin CORS are defense in depth; CORS alone is not abuse protection.
 
-## Phases
+## Remaining manual steps
 
-1. Replace the current mailto flow with real email delivery.
-2. Keep the WhatsApp button as a manual handoff.
-3. Review automation only after approval and clear usage needs.
-
-## Risks
-
-- Delivery failures if the provider is misconfigured.
-- Spam/abuse if the endpoint lacks basic validation.
-- WhatsApp automation complexity if approved too early.
-
-## Approval needed
-
-- Approve moving email delivery to a backendless/serverless integration.
-- Confirm whether WhatsApp should remain manual or move to an official API later.
+1. Configure Worker variables and secrets.
+2. Deploy the Worker when explicitly approved.
+3. Add the resulting public endpoint to the landing meta configuration.
+4. Run the activation verifier documented in `contact-worker/README.md`; an empty endpoint is a deployment-time blocker, not a placeholder for an invented URL.
+5. Perform a real end-to-end delivery check and monitor abuse.

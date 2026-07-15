@@ -133,10 +133,15 @@ const translations = {
 		contactFormEmail: "Email",
 		contactFormPhone: "WhatsApp / teléfono",
 		contactFormMessage: "Mensaje",
-		contactFormEmailButton: "Enviar por email",
-		contactFormWhatsAppButton: "Enviar por WhatsApp",
+		contactFormSubmit: "Enviar mensaje",
+		contactFormConsent:
+			"Autorizo el tratamiento de mis datos para responder esta solicitud. La política es provisional mientras se completa la información del responsable. Consultas de privacidad: haroldsthid@scapder.com.",
 		contactFormHelp:
-			"El mensaje se abre con tus datos en tu cliente de correo o WhatsApp.",
+			"Enviaremos tu solicitud al equipo de scapder.",
+		contactFormPending: "Enviando mensaje…",
+		contactFormSuccess: "Mensaje enviado. El equipo de scapder responderá pronto.",
+		contactFormError: "No pudimos enviar el mensaje. Intenta de nuevo más tarde.",
+		contactFormConfigError: "El formulario aún no está disponible. Intenta de nuevo más tarde.",
 		comparisonBaseLabel: "Sin cajas ni texto",
 		comparisonOverlayLabel: "Con detección visible",
 		comparisonLabel: "Desliza para comparar",
@@ -296,10 +301,15 @@ const translations = {
 		contactFormEmail: "Email",
 		contactFormPhone: "WhatsApp / phone",
 		contactFormMessage: "Message",
-		contactFormEmailButton: "Send by email",
-		contactFormWhatsAppButton: "Send by WhatsApp",
+		contactFormSubmit: "Send message",
+		contactFormConsent:
+			"I authorize the processing of my data to answer this request. The policy is provisional while the controller's information is completed. Privacy inquiries: haroldsthid@scapder.com.",
 		contactFormHelp:
-			"The message opens with your details in your email app or WhatsApp.",
+			"We will send your request to the scapder team.",
+		contactFormPending: "Sending message…",
+		contactFormSuccess: "Message sent. The scapder team will respond soon.",
+		contactFormError: "We could not send the message. Please try again later.",
+		contactFormConfigError: "The form is not available yet. Please try again later.",
 		comparisonBaseLabel: "No boxes or text",
 		comparisonOverlayLabel: "With visible detection",
 		comparisonLabel: "Slide to compare",
@@ -486,10 +496,15 @@ const translations = {
 		contactFormEmail: "Email",
 		contactFormPhone: "WhatsApp / telefone",
 		contactFormMessage: "Mensagem",
-		contactFormEmailButton: "Enviar por e-mail",
-		contactFormWhatsAppButton: "Enviar por WhatsApp",
+		contactFormSubmit: "Enviar mensagem",
+		contactFormConsent:
+			"Autorizo o tratamento dos meus dados para responder a esta solicitação. A política é provisória enquanto as informações do responsável são concluídas. Consultas de privacidade: haroldsthid@scapder.com.",
 		contactFormHelp:
-			"A mensagem é aberta com seus dados no seu cliente de e-mail ou no WhatsApp.",
+			"Enviaremos sua solicitação à equipe da scapder.",
+		contactFormPending: "Enviando mensagem…",
+		contactFormSuccess: "Mensagem enviada. A equipe da scapder responderá em breve.",
+		contactFormError: "Não foi possível enviar a mensagem. Tente novamente mais tarde.",
+		contactFormConfigError: "O formulário ainda não está disponível. Tente novamente mais tarde.",
 		comparisonBaseLabel: "Sem caixas nem texto",
 		comparisonOverlayLabel: "Com detecção visível",
 		comparisonLabel: "Deslize para comparar",
@@ -581,40 +596,82 @@ if (comparison && comparisonRange) {
 
 const contactForm = document.querySelector("[data-contact-form]");
 
-	if (contactForm) {
-		contactForm.addEventListener("submit", (event) => {
+if (contactForm) {
+	const submitButton = contactForm.querySelector("[data-contact-submit]");
+	const status = contactForm.querySelector("[data-contact-status]");
+	const startedAt = contactForm.querySelector("[data-form-started-at]");
+	const endpoint = document
+		.querySelector('meta[name="scapder-contact-endpoint"]')
+		?.content.trim();
+	let isSubmitting = false;
+
+	const resetStartedAt = () => {
+		if (startedAt) startedAt.value = String(Date.now());
+	};
+
+	const setStatus = (message, type = "", shouldFocus = false) => {
+		if (!status) return;
+		status.textContent = message;
+		status.dataset.type = type;
+		if (message && shouldFocus) status.focus();
+	};
+
+	resetStartedAt();
+
+	contactForm.addEventListener("submit", async (event) => {
 		event.preventDefault();
+		if (isSubmitting || !contactForm.reportValidity()) return;
+
 		const currentLanguage = document.documentElement.lang.startsWith("pt")
 			? "pt"
 			: document.documentElement.lang === "en"
 				? "en"
 				: "es";
 		const dictionary = translations[currentLanguage] || translations.es;
-		const submitter = event.submitter;
-		const channel = submitter?.dataset.channel === "whatsapp" ? "whatsapp" : "email";
-		const formData = new FormData(contactForm);
-		const name = String(formData.get("name") || "").trim();
-		const email = String(formData.get("email") || "").trim();
-		const phone = String(formData.get("phone") || "").trim();
-		const message = String(formData.get("message") || "").trim();
-		const payload = [
-			`${dictionary.contactFormName}: ${name}`,
-			`${dictionary.contactFormEmail}: ${email}`,
-			`${dictionary.contactFormPhone}: ${phone || "—"}`,
-			"",
-			message,
-		].join("\n");
 
-		if (channel === "whatsapp") {
-			const url = `https://wa.me/573001234567?text=${encodeURIComponent(payload)}`;
-			window.open(url, "_blank", "noopener,noreferrer");
+		if (!endpoint) {
+			setStatus(dictionary.contactFormConfigError, "error", true);
 			return;
 		}
 
-		const subjectBase = currentLanguage === "en" ? "Contact from scapder" : currentLanguage === "pt" ? "Contato com scapder" : "Contacto desde scapder";
-		const subject = encodeURIComponent(`${subjectBase}${name ? ` — ${name}` : ""}`);
-		const body = encodeURIComponent(payload);
-		window.location.href = `mailto:john.romero@scapder.org?subject=${subject}&body=${body}`;
+		const formData = new FormData(contactForm);
+		const payload = {
+			submissionId: crypto.randomUUID(),
+			name: String(formData.get("name") || ""),
+			email: String(formData.get("email") || ""),
+			phone: String(formData.get("phone") || ""),
+			message: String(formData.get("message") || ""),
+			website: String(formData.get("website") || ""),
+			formStartedAt: Number(formData.get("formStartedAt")),
+			consent: formData.get("consent") === "on",
+			language: currentLanguage,
+		};
+
+		isSubmitting = true;
+		if (submitButton) submitButton.disabled = true;
+		contactForm.setAttribute("aria-busy", "true");
+		setStatus(dictionary.contactFormPending);
+
+		try {
+			const response = await fetch(endpoint, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(payload),
+				signal: AbortSignal.timeout(10000),
+			});
+
+			if (!response.ok) throw new Error("Contact request failed");
+
+			contactForm.reset();
+			resetStartedAt();
+			setStatus(dictionary.contactFormSuccess, "success", true);
+		} catch {
+			setStatus(dictionary.contactFormError, "error", true);
+		} finally {
+			isSubmitting = false;
+			if (submitButton) submitButton.disabled = false;
+			contactForm.removeAttribute("aria-busy");
+		}
 	});
 }
 

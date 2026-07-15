@@ -83,7 +83,7 @@ Recommended marketing structure:
 5. Product ecosystem: Edge Sight AI, Sentientum, ML Spec if validated from PDF.
 6. Edge Sight AI spotlight/demo: detection/heatmap/security intelligence using existing realistic camera assets only where relevant.
 7. Process/capability model: how Scapder turns data into intelligence.
-8. Contact/final CTA with a form that launches email and WhatsApp actions.
+8. Contact/final CTA with a form that submits to the configured server-side contact API.
 9. Footer: company/product/legal/contact.
 
 ## Copy Rules
@@ -117,6 +117,14 @@ Use these checks when expanding or validating sections:
 - no horizontal mobile scroll;
 - below-fold images lazy-load and dimensions are reserved;
 - content order remains logical without CSS.
+
+## Contact Form Behavior
+- GitHub Pages remains a static client and sends JSON only to the configured public Worker endpoint.
+- Recipients, sender identity, and provider credentials must remain server-side.
+- Require explicit privacy consent and show the provisional privacy disclosure in Spanish, English, and Portuguese.
+- Submission feedback must expose pending, success, and failure states through an accessible live region and prevent duplicate submissions.
+- Require server-side rate limiting by Cloudflare client IP before delivery; fail closed when its binding is unavailable.
+- Honeypot, submission-age validation, strict field/body limits, and exact-origin CORS are defense in depth. CORS alone is not abuse protection.
 
 ## Stitch Workflow
 Current Stitch artifact is the export in `docs/stitch_scapder_robot_redesign/`. It is a visual reference, not production content.

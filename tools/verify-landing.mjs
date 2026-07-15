@@ -7,8 +7,9 @@ const read = (file) => readFileSync(resolve(root, file), "utf8");
 
 const indexHtml = read("index.html");
 const scriptJs = read("script.js");
-
-const waMeLinks = [...scriptJs.matchAll(/wa\.me\/(\d+)/g)].map((match) => match[1]);
+const workerJs = read("contact-worker/src/worker.mjs");
+const endpoint = /<meta name="scapder-contact-endpoint" content="([^"]*)"/.exec(indexHtml)?.[1].trim();
+const contactActivationRequired = process.env.SCAPDER_REQUIRE_CONTACT_ENDPOINT === "1";
 
 const checks = [
   {
@@ -22,14 +23,33 @@ const checks = [
       indexHtml.includes('<h1 id="hero-title" data-i18n="heroTitle">scapder</h1>'),
   },
   {
-    name: "contact endpoints are present in form routing",
+    name: "contact form uses the API without private routing data",
     pass:
-      scriptJs.includes('john.romero@scapder.org') &&
-      scriptJs.includes('3001234567') &&
-      scriptJs.includes('wa.me/573001234567') &&
-      waMeLinks.length > 0 &&
-      waMeLinks.every((phone) => phone === '573001234567') &&
-      !indexHtml.includes('wa.me/'),
+      indexHtml.includes('name="scapder-contact-endpoint"') &&
+      indexHtml.includes('name="consent"') &&
+      indexHtml.includes('name="website"') &&
+      indexHtml.includes('data-form-started-at') &&
+      scriptJs.includes('fetch(endpoint') &&
+      scriptJs.includes('submissionId: crypto.randomUUID()') &&
+      scriptJs.includes('signal: AbortSignal.timeout(') &&
+      !scriptJs.includes('mailto:') &&
+      !scriptJs.includes('wa.me/') &&
+      !scriptJs.includes('CONTACT_RECIPIENTS'),
+  },
+  {
+    name: "contact worker keeps delivery configuration server-side",
+    pass:
+      workerJs.includes("env.RESEND_API_KEY") &&
+      workerJs.includes("env.CONTACT_RECIPIENTS") &&
+      workerJs.includes("env.CONTACT_FROM_EMAIL") &&
+      workerJs.includes("env.ALLOWED_ORIGINS") &&
+      workerJs.includes("env.CONTACT_RATE_LIMITER.limit") &&
+      workerJs.includes('"Idempotency-Key"') &&
+      workerJs.includes("AbortSignal.timeout("),
+  },
+  {
+    name: "contact endpoint is configured when deployment activation is required",
+    pass: !contactActivationRequired || Boolean(endpoint),
   },
   {
     name: "pt-BR support is wired",

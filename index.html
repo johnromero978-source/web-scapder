@@ -8,6 +8,7 @@
       name="description"
       content="scapder transforma datos complejos en inteligencia accionable mediante IA aplicada, co-creación y transferencia de capacidades."
     />
+    <meta name="scapder-contact-endpoint" content="" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -657,17 +658,26 @@
                   <textarea name="message" rows="5" required></textarea>
                 </label>
               </div>
+              <label class="form-honeypot" aria-hidden="true">
+                Website
+                <input name="website" type="text" tabindex="-1" autocomplete="off" />
+              </label>
+              <input name="formStartedAt" type="hidden" data-form-started-at />
+              <label class="contact-consent">
+                <input name="consent" type="checkbox" required />
+                <span data-i18n="contactFormConsent">
+                  Autorizo el tratamiento de mis datos para responder esta solicitud. La política es provisional mientras se completa la información del responsable. Consultas de privacidad: haroldsthid@scapder.com.
+                </span>
+              </label>
               <div class="contact-form-actions">
-                <button class="btn btn-primary" type="submit" data-channel="email" data-i18n="contactFormEmailButton">
-                  Enviar por email
-                </button>
-                <button class="btn btn-secondary" type="submit" data-channel="whatsapp" data-i18n="contactFormWhatsAppButton">
-                  Enviar por WhatsApp
+                <button class="btn btn-primary" type="submit" data-contact-submit data-i18n="contactFormSubmit">
+                  Enviar mensaje
                 </button>
               </div>
               <p class="contact-help" data-i18n="contactFormHelp">
-                El mensaje se abre con tus datos en tu cliente de correo o WhatsApp.
+                Enviaremos tu solicitud al equipo de scapder.
               </p>
+              <p class="contact-status" data-contact-status role="status" aria-live="polite" tabindex="-1"></p>
             </form>
           </div>
         </div>
