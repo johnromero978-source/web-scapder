@@ -125,8 +125,8 @@ const translations = {
 		contactLead:
 			"Si tu organización tiene datos dispersos, infraestructura existente o modelos que necesitan llegar a operación, scapder puede ayudarte a convertirlos en inteligencia accionable.",
 		footerTagline: "Transformar datos en inteligencia accionable.",
-		sentientumDemoCta: "Ver demo",
-		sentientumDemoLabel: "Abrir la demo de Sentientum",
+		sentientumDemoCta: "Conocer Sentientum",
+		sentientumDemoLabel: "Conocer Sentientum",
 		contactEmailLabel: "Email",
 		contactWhatsAppLabel: "WhatsApp",
 		contactFormName: "Nombre",
@@ -170,6 +170,38 @@ const translations = {
 		teamMember04Role: "Product & Business Development",
 		teamMember04ImageAlt: "Joshua De La Pava",
 		teamMember04LinkedInLabel: "Abrir el perfil de LinkedIn de Joshua De La Pava",
+		stvVideoFallback:
+			"Este recorrido está grabado en español. Las versiones en inglés y portugués están en producción.",
+		stvStepZeroTitle: "La Constitución",
+		stvStepZeroPlain:
+			"Es darle a un guionista una sinopsis y una lista de nombres. El elenco lo arma él.",
+		stvStepOneTitle: "El grafo",
+		stvStepOnePlain:
+			"Dibuja el organigrama invisible: quién conoce a quién, quién le responde a quién, antes de que nadie diga una palabra.",
+		stvStepTwoTitle: "El elenco",
+		stvStepTwoPlain:
+			"Casting completo. A cada personaje se le escribe una historia y una agenda, porque nadie discute las veinticuatro horas.",
+		stvStepThreeTitle: "La corrida",
+		stvStepThreePlain:
+			"Una obra de teatro con guión abierto: los actores improvisan dentro de su personaje, ronda tras ronda.",
+		stvStepFourTitle: "El informe",
+		stvStepFourPlain:
+			"El informe que llevarías a un directorio: qué pasó, quién dijo qué, y con qué evidencia.",
+		stvStepFiveTitle: "Las preguntas",
+		stvStepFivePlain:
+			"Terminada la función, podés sentarte con un personaje y preguntarle por qué hizo lo que hizo.",
+		stvProofBody:
+			"Cada afirmación del informe apunta a un mensaje concreto de un agente concreto. Si algo no se puede citar, el sistema lo marca en lugar de afirmarlo.",
+		stvFactAgentsLabel: "Agentes",
+		stvFactRoundsLabel: "Rondas",
+		stvFactActionsLabel: "Acciones registradas",
+		stvFactCitationLabel: "Afirmaciones con cita",
+		modalCloseLabel: "Cerrar",
+		stvModalLede: "Escribís un documento con las reglas de un mundo y la pregunta que querés poner a prueba. Sentientum arma la población que vive en ese mundo y la deja discutir.",
+		stvModalStepsLabel: "Seis pasos. Uno solo lo escribís vos.",
+		stvModalProofLabel: "Una corrida real, publicada sin editar",
+		stvModalVideoCta: "Ver el recorrido",
+		stvModalRunCta: "Abrir la corrida",
 	},
 	en: {
 		skip: "Skip to main content",
@@ -293,8 +325,8 @@ const translations = {
 		contactLead:
 			"If your organization has fragmented data, existing infrastructure, or models that need to reach operations, scapder can help turn them into actionable intelligence.",
 		footerTagline: "Turning data into actionable intelligence.",
-		sentientumDemoCta: "View demo",
-		sentientumDemoLabel: "Open the Sentientum demo",
+		sentientumDemoCta: "Explore Sentientum",
+		sentientumDemoLabel: "Explore Sentientum",
 		contactEmailLabel: "Email",
 		contactWhatsAppLabel: "WhatsApp",
 		contactFormName: "Name",
@@ -338,6 +370,38 @@ const translations = {
 		teamMember04Role: "Product & Business Development",
 		teamMember04ImageAlt: "Joshua De La Pava",
 		teamMember04LinkedInLabel: "Open the LinkedIn profile of Joshua De La Pava",
+		stvVideoFallback:
+			"This walkthrough is recorded in Spanish. The English and Portuguese versions are in production.",
+		stvStepZeroTitle: "The Constitution",
+		stvStepZeroPlain:
+			"It is handing a screenwriter a synopsis and a list of names. The cast is theirs to build.",
+		stvStepOneTitle: "The graph",
+		stvStepOnePlain:
+			"It draws the invisible org chart: who knows whom, who answers to whom, before anyone says a word.",
+		stvStepTwoTitle: "The cast",
+		stvStepTwoPlain:
+			"Full casting. Each character gets a history and a calendar, because nobody argues twenty-four hours a day.",
+		stvStepThreeTitle: "The run",
+		stvStepThreePlain:
+			"A play with an open script: the actors improvise inside their character, round after round.",
+		stvStepFourTitle: "The report",
+		stvStepFourPlain:
+			"The report you would take to a board: what happened, who said what, and on what evidence.",
+		stvStepFiveTitle: "The questions",
+		stvStepFivePlain:
+			"Once the show is over, you can sit down with a character and ask why they did what they did.",
+		stvProofBody:
+			"Every claim in the report points at a concrete message from a concrete agent. When something cannot be cited, the system flags it instead of asserting it.",
+		stvFactAgentsLabel: "Agents",
+		stvFactRoundsLabel: "Rounds",
+		stvFactActionsLabel: "Recorded actions",
+		stvFactCitationLabel: "Claims with citations",
+		modalCloseLabel: "Close",
+		stvModalLede: "You write a document with the rules of a world and the question you want to put to the test. Sentientum builds the population that lives in that world and lets it argue.",
+		stvModalStepsLabel: "Six steps. You write only one.",
+		stvModalProofLabel: "A real run, published unedited",
+		stvModalVideoCta: "Watch the walkthrough",
+		stvModalRunCta: "Open the run",
 	},
 	pt: {
 		skip: "Pular para o conteúdo principal",
@@ -432,8 +496,8 @@ const translations = {
 		sentientumPillarOne: "Simulação",
 		sentientumPillarTwo: "Escala",
 		sentientumPillarThree: "Sem risco",
-		sentientumDemoCta: "Ver demo",
-		sentientumDemoLabel: "Abrir a demo do Sentientum",
+		sentientumDemoCta: "Conhecer o Sentientum",
+		sentientumDemoLabel: "Conhecer o Sentientum",
 		mlspecCategory: "MLOps · Governança de IA",
 		mlspecOneLiner: "Sistema operacional para escalar modelos de ML.",
 		mlspecPillarOne: "Lab para produção",
@@ -511,6 +575,38 @@ const translations = {
 		comparisonHelp:
 			"A barra vertical revela a versão com detecção.",
 		comparisonAria: "Ajustar a comparação do Edge Sight AI",
+		stvVideoFallback:
+			"Este percurso foi gravado em espanhol. As versões em inglês e português estão em produção.",
+		stvStepZeroTitle: "A Constituição",
+		stvStepZeroPlain:
+			"É dar a um roteirista uma sinopse e uma lista de nomes. O elenco ele monta.",
+		stvStepOneTitle: "O grafo",
+		stvStepOnePlain:
+			"Desenha o organograma invisível: quem conhece quem, quem responde a quem, antes de alguém dizer uma palavra.",
+		stvStepTwoTitle: "O elenco",
+		stvStepTwoPlain:
+			"Casting completo. Cada personagem ganha uma história e uma agenda, porque ninguém discute vinte e quatro horas por dia.",
+		stvStepThreeTitle: "A execução",
+		stvStepThreePlain:
+			"Uma peça de teatro com roteiro aberto: os atores improvisam dentro do personagem, rodada após rodada.",
+		stvStepFourTitle: "O relatório",
+		stvStepFourPlain:
+			"O relatório que você levaria a um conselho: o que aconteceu, quem disse o quê, e com que evidência.",
+		stvStepFiveTitle: "As perguntas",
+		stvStepFivePlain:
+			"Terminada a apresentação, você pode sentar com um personagem e perguntar por que fez o que fez.",
+		stvProofBody:
+			"Cada afirmação do relatório aponta para uma mensagem concreta de um agente concreto. Quando algo não pode ser citado, o sistema sinaliza em vez de afirmar.",
+		stvFactAgentsLabel: "Agentes",
+		stvFactRoundsLabel: "Rodadas",
+		stvFactActionsLabel: "Ações registradas",
+		stvFactCitationLabel: "Afirmações com citação",
+		modalCloseLabel: "Fechar",
+		stvModalLede: "Você escreve um documento com as regras de um mundo e a pergunta que quer colocar à prova. O Sentientum monta a população que vive nesse mundo e a deixa discutir.",
+		stvModalStepsLabel: "Seis passos. Só um é escrito por você.",
+		stvModalProofLabel: "Uma execução real, publicada sem edição",
+		stvModalVideoCta: "Ver o percurso",
+		stvModalRunCta: "Abrir a execução",
 	},
 };
 
@@ -553,6 +649,36 @@ function applyLanguage(lang) {
 	});
 
 	window.localStorage.setItem("scapder-language", lang);
+
+	updateSentientumVideoLink(lang);
+}
+
+// One recording per language. They are the same URL today because only the
+// Spanish walkthrough is recorded; the English and Portuguese entries exist so
+// that publishing them is an edit here and nothing else. An entry equal to the
+// Spanish one means "not recorded yet", which is why the note below appears.
+const sentientumVideos = {
+	es: "https://youtu.be/TUhzrgKe458",
+	en: "https://youtu.be/TUhzrgKe458",
+	pt: "https://youtu.be/TUhzrgKe458",
+};
+
+function updateSentientumVideoLink(lang) {
+	const link = document.querySelector("[data-video-link]");
+	if (!link) {
+		return;
+	}
+
+	const href = sentientumVideos[lang] || sentientumVideos.es;
+	link.href = href;
+
+	// Told, not hidden: someone who picked English and gets a Spanish video
+	// should learn that from the page rather than from the first ten seconds
+	// of the video.
+	const note = document.querySelector("[data-video-note]");
+	if (note) {
+		note.hidden = lang === "es" || href !== sentientumVideos.es;
+	}
 }
 
 const savedLanguage = window.localStorage.getItem("scapder-language");
@@ -562,6 +688,81 @@ document.querySelectorAll(".language-option").forEach((button) => {
 	button.addEventListener("click", () => {
 		applyLanguage(button.dataset.lang === "en" || button.dataset.lang === "pt" ? button.dataset.lang : "es");
 	});
+});
+
+// ── Detail dialogs ──
+//
+// Opened from a product card. Keyboard and screen-reader behaviour is the part
+// worth writing by hand: Escape closes, focus moves into the panel and returns
+// to the card that opened it, and Tab is kept inside while it is open — a
+// dialog you can Tab out of silently is a dialog that is not one.
+document.querySelectorAll("[data-modal-open]").forEach((trigger) => {
+	const modal = document.getElementById(trigger.dataset.modalOpen);
+	if (!modal) {
+		return;
+	}
+
+	const panel = modal.querySelector(".modal-panel");
+	const focusable = () =>
+		[...modal.querySelectorAll('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])')].filter(
+			(node) => node.offsetParent !== null,
+		);
+
+	const close = () => {
+		modal.hidden = true;
+		document.body.style.removeProperty("overflow");
+		trigger.focus();
+	};
+
+	const onKeydown = (event) => {
+		if (modal.hidden) {
+			return;
+		}
+
+		if (event.key === "Escape") {
+			close();
+			return;
+		}
+
+		if (event.key !== "Tab") {
+			return;
+		}
+
+		const nodes = focusable();
+		if (nodes.length === 0) {
+			return;
+		}
+
+		const first = nodes[0];
+		const last = nodes[nodes.length - 1];
+
+		if (event.shiftKey && document.activeElement === first) {
+			event.preventDefault();
+			last.focus();
+		} else if (!event.shiftKey && document.activeElement === last) {
+			event.preventDefault();
+			first.focus();
+		}
+	};
+
+	trigger.addEventListener("click", () => {
+		modal.hidden = false;
+		// The page behind must not scroll under the dialog.
+		document.body.style.overflow = "hidden";
+		if (panel) {
+			panel.scrollTop = 0;
+		}
+		const [firstFocusable] = focusable();
+		if (firstFocusable) {
+			firstFocusable.focus();
+		}
+	});
+
+	modal.querySelectorAll("[data-modal-close]").forEach((node) => {
+		node.addEventListener("click", close);
+	});
+
+	document.addEventListener("keydown", onKeydown);
 });
 
 const nav = document.getElementById("site-nav");

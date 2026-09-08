@@ -448,13 +448,16 @@
               </ul>
             </article>
 
-            <a
+            <!-- Opens the detail dialog rather than leaving the site. The
+                 previous destination was the Sentientum web login, which asked
+                 a stranger to authenticate before anything had told them what
+                 the thing is. A button, not a link, because it goes nowhere. -->
+            <button
               class="product-card product-card-link"
-              href="https://sentientum-demo.fly.dev/"
-              target="_blank"
-              rel="noopener noreferrer"
+              type="button"
+              data-modal-open="sentientum-modal"
               data-reveal
-              aria-label="Abrir la demo de Sentientum"
+              aria-label="Conocer Sentientum"
               data-i18n-aria-label="sentientumDemoLabel"
             >
               <p class="product-category" data-i18n="sentientumCategory">
@@ -469,8 +472,8 @@
                 <li data-i18n="sentientumPillarTwo">Escala</li>
                 <li data-i18n="sentientumPillarThree">Sin riesgo</li>
               </ul>
-              <span class="product-card-cta" data-i18n="sentientumDemoCta">Ver demo</span>
-            </a>
+              <span class="product-card-cta" data-i18n="sentientumDemoCta">Conocer Sentientum</span>
+            </button>
 
             <article class="product-card" data-reveal>
               <p class="product-category" data-i18n="mlspecCategory">
@@ -705,6 +708,153 @@
         </nav>
       </div>
     </footer>
+
+    <!-- Sentientum detail. Lives in the page rather than on a route of its own:
+         the product card is a card, and what it owes a reader is the next layer
+         of detail, not a second site to navigate back out of. -->
+    <div
+      class="modal"
+      id="sentientum-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="sentientum-modal-title"
+      hidden
+    >
+      <div class="modal-backdrop" data-modal-close></div>
+
+      <div class="modal-panel" role="document">
+        <button
+          class="modal-close"
+          type="button"
+          data-modal-close
+          aria-label="Cerrar"
+          data-i18n-aria-label="modalCloseLabel"
+        >
+          <span aria-hidden="true">×</span>
+        </button>
+
+        <p class="modal-category" data-i18n="sentientumCategory">
+          Audiencias Sintéticas · AI Agents
+        </p>
+        <h2 id="sentientum-modal-title">Sentientum</h2>
+        <p class="modal-lede" data-i18n="stvModalLede">
+          Escribís un documento con las reglas de un mundo y la pregunta que
+          querés poner a prueba. Sentientum arma la población que vive en ese
+          mundo y la deja discutir.
+        </p>
+
+        <p class="modal-section-label" data-i18n="stvModalStepsLabel">
+          Seis pasos. Uno solo lo escribís vos.
+        </p>
+        <ol class="modal-steps">
+          <li>
+            <span class="modal-step-index" aria-hidden="true">00</span>
+            <span class="modal-step-name" data-i18n="stvStepZeroTitle">La Constitución</span>
+            <span class="modal-step-copy" data-i18n="stvStepZeroPlain">
+              Es darle a un guionista una sinopsis y una lista de nombres. El
+              elenco lo arma él.
+            </span>
+          </li>
+          <li>
+            <span class="modal-step-index" aria-hidden="true">01</span>
+            <span class="modal-step-name" data-i18n="stvStepOneTitle">El grafo</span>
+            <span class="modal-step-copy" data-i18n="stvStepOnePlain">
+              Dibuja el organigrama invisible: quién conoce a quién, quién le
+              responde a quién, antes de que nadie diga una palabra.
+            </span>
+          </li>
+          <li>
+            <span class="modal-step-index" aria-hidden="true">02</span>
+            <span class="modal-step-name" data-i18n="stvStepTwoTitle">El elenco</span>
+            <span class="modal-step-copy" data-i18n="stvStepTwoPlain">
+              Casting completo. A cada personaje se le escribe una historia y una
+              agenda, porque nadie discute las veinticuatro horas.
+            </span>
+          </li>
+          <li>
+            <span class="modal-step-index" aria-hidden="true">03</span>
+            <span class="modal-step-name" data-i18n="stvStepThreeTitle">La corrida</span>
+            <span class="modal-step-copy" data-i18n="stvStepThreePlain">
+              Una obra de teatro con guión abierto: los actores improvisan dentro
+              de su personaje, ronda tras ronda.
+            </span>
+          </li>
+          <li>
+            <span class="modal-step-index" aria-hidden="true">04</span>
+            <span class="modal-step-name" data-i18n="stvStepFourTitle">El informe</span>
+            <span class="modal-step-copy" data-i18n="stvStepFourPlain">
+              El informe que llevarías a un directorio: qué pasó, quién dijo qué,
+              y con qué evidencia.
+            </span>
+          </li>
+          <li>
+            <span class="modal-step-index" aria-hidden="true">05</span>
+            <span class="modal-step-name" data-i18n="stvStepFiveTitle">Las preguntas</span>
+            <span class="modal-step-copy" data-i18n="stvStepFivePlain">
+              Terminada la función, podés sentarte con un personaje y preguntarle
+              por qué hizo lo que hizo.
+            </span>
+          </li>
+        </ol>
+
+        <p class="modal-section-label" data-i18n="stvModalProofLabel">
+          Una corrida real, publicada sin editar
+        </p>
+        <dl class="modal-facts">
+          <div>
+            <dt data-i18n="stvFactAgentsLabel">Agentes</dt>
+            <dd>17</dd>
+          </div>
+          <div>
+            <dt data-i18n="stvFactRoundsLabel">Rondas</dt>
+            <dd>12</dd>
+          </div>
+          <div>
+            <dt data-i18n="stvFactActionsLabel">Acciones registradas</dt>
+            <dd>64</dd>
+          </div>
+          <div>
+            <dt data-i18n="stvFactCitationLabel">Afirmaciones con cita</dt>
+            <dd>100%</dd>
+          </div>
+        </dl>
+        <p class="modal-proof-copy" data-i18n="stvProofBody">
+          Cada afirmación del informe apunta a un mensaje concreto de un agente
+          concreto. Si algo no se puede citar, el sistema lo marca en lugar de
+          afirmarlo.
+        </p>
+
+        <div class="modal-actions">
+          <a
+            class="btn btn-primary btn-youtube"
+            href="https://youtu.be/TUhzrgKe458"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-video-link
+          >
+            <svg class="btn-youtube-mark" viewBox="0 0 24 17" aria-hidden="true" focusable="false">
+              <path
+                d="M23.5 2.66A3.01 3.01 0 0 0 21.38.54C19.5 0 12 0 12 0S4.5 0 2.62.54A3.01 3.01 0 0 0 .5 2.66C0 4.54 0 8.5 0 8.5s0 3.96.5 5.84a3.01 3.01 0 0 0 2.12 2.12C4.5 17 12 17 12 17s7.5 0 9.38-.54a3.01 3.01 0 0 0 2.12-2.12C24 12.46 24 8.5 24 8.5s0-3.96-.5-5.84ZM9.55 12.1V4.9l6.27 3.6-6.27 3.6Z"
+                fill="currentColor"
+              />
+            </svg>
+            <span data-i18n="stvModalVideoCta">Ver el recorrido</span>
+          </a>
+          <a
+            class="btn"
+            href="https://sentientum-viewer.fly.dev/"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-i18n="stvModalRunCta"
+            >Abrir la corrida</a
+          >
+        </div>
+        <p class="modal-note" data-video-note hidden data-i18n="stvVideoFallback">
+          Este recorrido está grabado en español. Las versiones en inglés y
+          portugués están en producción.
+        </p>
+      </div>
+    </div>
 
     <script src="script.js"></script>
   </body>

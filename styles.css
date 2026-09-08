@@ -1334,3 +1334,261 @@ h3 {
 		animation-iteration-count: 1 !important;
 	}
 }
+
+
+/* ── Sentientum detail dialog ─────────────────────────────────────────────
+   Opens from the product card, so it borrows that card's dark surface rather
+   than the page's off-white. Same tokens, same 4/8px radii, same 160ms motion
+   budget as everything else here.
+   ------------------------------------------------------------------------ */
+
+/* The card became a <button> when it stopped being a link; these are the
+   properties a button does not inherit and a card needs. */
+button.product-card-link {
+	width: 100%;
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
+}
+
+.modal[hidden] {
+	display: none;
+}
+
+.modal {
+	position: fixed;
+	inset: 0;
+	/* Above the sticky site header, which sits at 100. At 50 the header drew
+	   on top of the dialog and ate its first rows. Still below the skip link
+	   at 1000, which has to outrank everything. */
+	z-index: 200;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 24px;
+}
+
+.modal-backdrop {
+	position: fixed;
+	inset: 0;
+	background: rgba(26, 28, 28, 0.72);
+	border: 0;
+}
+
+.modal-panel {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	width: min(720px, 100%);
+	/* The panel scrolls, not the overlay. When the overlay scrolled instead,
+	   content taller than the viewport pushed its own top off screen and took
+	   the close button with it. `dvh` so mobile browser chrome cannot clip it
+	   either; the `vh` line above is the fallback. */
+	max-height: calc(100vh - 48px);
+	max-height: calc(100dvh - 48px);
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	padding: 40px;
+	border: 1px solid rgba(255, 255, 255, 0.18);
+	border-radius: 8px;
+	background: #242424;
+	color: var(--scapder-inverse-ink);
+}
+
+.modal-close {
+	/* Sticky rather than absolute: it has to stay reachable while the panel
+	   scrolls. Negative offsets pull it back into the panel's padding so it
+	   does not add a row of its own. */
+	position: sticky;
+	top: -8px;
+	align-self: flex-end;
+	margin: -16px -16px 0 auto;
+	flex: none;
+	width: 44px;
+	height: 44px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border: 1px solid transparent;
+	border-radius: 4px;
+	background: none;
+	color: inherit;
+	font: inherit;
+	font-size: 24px;
+	line-height: 1;
+	cursor: pointer;
+	transition: border-color 160ms ease;
+}
+
+.modal-close:hover,
+.modal-close:focus-visible {
+	border-color: rgba(255, 255, 255, 0.4);
+}
+
+.modal-category {
+	margin: 0 0 8px;
+	color: rgba(255, 255, 255, 0.62);
+	font-size: 13px;
+}
+
+.modal-panel h2 {
+	font-size: 28px;
+	text-shadow: none;
+}
+
+.modal-lede {
+	margin: 16px 0 0;
+	max-width: 56ch;
+	color: rgba(255, 255, 255, 0.82);
+	line-height: 1.6;
+}
+
+.modal-section-label {
+	margin: 32px 0 0;
+	padding-top: 24px;
+	border-top: 1px solid rgba(255, 255, 255, 0.18);
+	color: rgba(255, 255, 255, 0.62);
+	font-size: 12px;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+}
+
+.modal-steps {
+	display: grid;
+	gap: 0;
+	margin: 16px 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+.modal-steps li {
+	display: grid;
+	grid-template-columns: 32px minmax(0, 1fr);
+	gap: 4px 12px;
+	padding: 16px 0;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.modal-steps li:last-child {
+	border-bottom: 0;
+}
+
+.modal-step-index {
+	grid-row: span 2;
+	color: rgba(255, 255, 255, 0.42);
+	font-size: 13px;
+	font-variant-numeric: tabular-nums;
+}
+
+.modal-step-name {
+	font-weight: 700;
+}
+
+.modal-step-copy {
+	color: rgba(255, 255, 255, 0.72);
+	font-size: 14px;
+	line-height: 1.6;
+}
+
+.modal-facts {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 16px;
+	margin: 20px 0 0;
+}
+
+.modal-facts dt {
+	color: rgba(255, 255, 255, 0.62);
+	font-size: 11px;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	line-height: 1.4;
+}
+
+.modal-facts dd {
+	margin: 6px 0 0;
+	font-size: 26px;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	line-height: 1;
+}
+
+.modal-proof-copy {
+	margin: 20px 0 0;
+	color: rgba(255, 255, 255, 0.72);
+	font-size: 14px;
+	line-height: 1.6;
+}
+
+.modal-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	margin-top: 32px;
+}
+
+.modal-actions .btn {
+	border-color: rgba(255, 255, 255, 0.4);
+	color: var(--scapder-inverse-ink);
+}
+
+.modal-actions .btn:hover,
+.modal-actions .btn:focus-visible {
+	border-color: var(--scapder-inverse-ink);
+}
+
+.modal-actions .btn-primary {
+	background: var(--scapder-inverse-ink);
+	border-color: var(--scapder-inverse-ink);
+	color: var(--scapder-ink);
+}
+
+.btn-youtube-mark {
+	width: 20px;
+	height: auto;
+	flex: none;
+}
+
+.modal-note {
+	margin: 16px 0 0;
+	color: rgba(255, 255, 255, 0.62);
+	font-size: 13px;
+	line-height: 1.5;
+}
+
+.modal-note[hidden] {
+	display: none;
+}
+
+@media (max-width: 720px) {
+	.modal {
+		padding: 12px;
+	}
+
+	.modal-panel {
+		max-height: calc(100vh - 24px);
+		max-height: calc(100dvh - 24px);
+		padding: 24px 20px;
+	}
+
+	.modal-panel h2 {
+		font-size: 24px;
+	}
+
+	.modal-steps li {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 4px;
+	}
+
+	.modal-step-index {
+		grid-row: auto;
+	}
+
+	.modal-facts {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.modal-actions .btn {
+		width: 100%;
+	}
+}

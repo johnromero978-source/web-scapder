@@ -59,8 +59,45 @@ const checks = [
       scriptJs.includes('lang === "pt" ? "pt-BR" : lang'),
   },
   {
-    name: "Sentientum demo URL is present",
-    pass: indexHtml.includes('https://sentientum-demo.fly.dev/'),
+    // Was an assertion on the fly.io demo URL. The card now opens an in-page
+    // dialog instead of leaving the site, so the thing worth pinning moved.
+    name: "Sentientum card opens the detail dialog",
+    pass:
+      indexHtml.includes('data-modal-open="sentientum-modal"') &&
+      indexHtml.includes('id="sentientum-modal"') &&
+      indexHtml.includes('aria-modal="true"') &&
+      scriptJs.includes("[data-modal-open]"),
+  },
+  {
+    // A dialog you cannot close with the keyboard, or that lets Tab wander
+    // into the page behind it, is not a dialog.
+    name: "detail dialog is keyboard operable",
+    pass:
+      indexHtml.includes("data-modal-close") &&
+      scriptJs.includes('event.key === "Escape"') &&
+      scriptJs.includes('event.key !== "Tab"'),
+  },
+  {
+    name: "walkthrough link is per language and falls back honestly",
+    pass:
+      indexHtml.includes("data-video-link") &&
+      indexHtml.includes("data-video-note") &&
+      /const sentientumVideos = \{[^}]*\bes:[^}]*\ben:[^}]*\bpt:/s.test(scriptJs),
+  },
+  {
+    // Every string the page renders must exist in all three dictionaries, or
+    // switching language silently leaves the previous one on screen.
+    name: "every rendered string exists in es, en and pt",
+    pass: (() => {
+      const keys = new Set(
+        [...indexHtml.matchAll(/data-i18n(?:-html|-aria-label|-alt)?="([^"]+)"/g)].map((m) => m[1]),
+      );
+      const dictionaries = ["es", "en", "pt"].map((lang) => {
+        const start = scriptJs.indexOf(`\t${lang}: {`);
+        return scriptJs.slice(start, scriptJs.indexOf("\n\t},", start));
+      });
+      return [...keys].every((key) => dictionaries.every((d) => d.includes(`${key}:`)));
+    })(),
   },
   {
     name: "Edge Sight comparison slider hooks exist",
