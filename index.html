@@ -743,6 +743,33 @@
           mundo y la deja discutir.
         </p>
 
+        <div class="modal-video">
+          <div class="modal-video-frame" data-video-frame tabindex="-1">
+            <img
+              class="modal-video-poster"
+              data-video-poster
+              src="https://i.ytimg.com/vi/TUhzrgKe458/maxresdefault.jpg"
+              data-i18n-alt="stvModalVideoAlt"
+              alt="Vista previa del recorrido en video de Sentientum"
+              loading="lazy"
+            />
+            <button class="modal-video-play" type="button" data-video-play>
+              <svg class="btn-youtube-mark" viewBox="0 0 24 17" aria-hidden="true" focusable="false">
+                <path
+                  d="M23.5 2.66A3.01 3.01 0 0 0 21.38.54C19.5 0 12 0 12 0S4.5 0 2.62.54A3.01 3.01 0 0 0 .5 2.66C0 4.54 0 8.5 0 8.5s0 3.96.5 5.84a3.01 3.01 0 0 0 2.12 2.12C4.5 17 12 17 12 17s7.5 0 9.38-.54a3.01 3.01 0 0 0 2.12-2.12C24 12.46 24 8.5 24 8.5s0-3.96-.5-5.84ZM9.55 12.1V4.9l6.27 3.6-6.27 3.6Z"
+                  fill="currentColor"
+                />
+              </svg>
+              <span data-i18n="stvModalVideoCta">Ver el recorrido</span>
+            </button>
+          </div>
+        </div>
+
+        <p class="modal-note" data-video-note hidden data-i18n="stvVideoFallback">
+          Este recorrido está grabado en español. Las versiones en inglés y
+          portugués están en producción.
+        </p>
+
         <p class="modal-section-label" data-i18n="stvModalStepsLabel">
           Seis pasos. Uno solo lo escribís vos.
         </p>
@@ -824,22 +851,8 @@
           afirmarlo.
         </p>
 
+
         <div class="modal-actions">
-          <a
-            class="btn btn-primary btn-youtube"
-            href="https://youtu.be/TUhzrgKe458"
-            target="_blank"
-            rel="noopener noreferrer"
-            data-video-link
-          >
-            <svg class="btn-youtube-mark" viewBox="0 0 24 17" aria-hidden="true" focusable="false">
-              <path
-                d="M23.5 2.66A3.01 3.01 0 0 0 21.38.54C19.5 0 12 0 12 0S4.5 0 2.62.54A3.01 3.01 0 0 0 .5 2.66C0 4.54 0 8.5 0 8.5s0 3.96.5 5.84a3.01 3.01 0 0 0 2.12 2.12C4.5 17 12 17 12 17s7.5 0 9.38-.54a3.01 3.01 0 0 0 2.12-2.12C24 12.46 24 8.5 24 8.5s0-3.96-.5-5.84ZM9.55 12.1V4.9l6.27 3.6-6.27 3.6Z"
-                fill="currentColor"
-              />
-            </svg>
-            <span data-i18n="stvModalVideoCta">Ver el recorrido</span>
-          </a>
           <a
             class="btn"
             href="https://sentientum-viewer.fly.dev/"
@@ -849,10 +862,6 @@
             >Abrir la corrida</a
           >
         </div>
-        <p class="modal-note" data-video-note hidden data-i18n="stvVideoFallback">
-          Este recorrido está grabado en español. Las versiones en inglés y
-          portugués están en producción.
-        </p>
       </div>
     </div>
 
