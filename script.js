@@ -201,6 +201,7 @@ const translations = {
 		stvModalStepsLabel: "Seis pasos. Uno solo lo escribís vos.",
 		stvModalProofLabel: "Una corrida real, publicada sin editar",
 		stvModalVideoCta: "Ver el recorrido",
+		stvModalVideoAlt: "Vista previa del recorrido en video de Sentientum",
 		stvModalRunCta: "Abrir la corrida",
 	},
 	en: {
@@ -401,6 +402,7 @@ const translations = {
 		stvModalStepsLabel: "Six steps. You write only one.",
 		stvModalProofLabel: "A real run, published unedited",
 		stvModalVideoCta: "Watch the walkthrough",
+		stvModalVideoAlt: "Preview of the Sentientum video walkthrough",
 		stvModalRunCta: "Open the run",
 	},
 	pt: {
@@ -606,6 +608,7 @@ const translations = {
 		stvModalStepsLabel: "Seis passos. Só um é escrito por você.",
 		stvModalProofLabel: "Uma execução real, publicada sem edição",
 		stvModalVideoCta: "Ver o percurso",
+		stvModalVideoAlt: "Prévia do vídeo do percurso do Sentientum",
 		stvModalRunCta: "Abrir a execução",
 	},
 };
@@ -650,35 +653,130 @@ function applyLanguage(lang) {
 
 	window.localStorage.setItem("scapder-language", lang);
 
-	updateSentientumVideoLink(lang);
+	updateSentientumVideo(lang);
 }
 
-// One recording per language. They are the same URL today because only the
+// One recording per language. They are the same id today because only the
 // Spanish walkthrough is recorded; the English and Portuguese entries exist so
 // that publishing them is an edit here and nothing else. An entry equal to the
 // Spanish one means "not recorded yet", which is why the note below appears.
 const sentientumVideos = {
-	es: "https://youtu.be/TUhzrgKe458",
-	en: "https://youtu.be/TUhzrgKe458",
-	pt: "https://youtu.be/TUhzrgKe458",
+	es: "TUhzrgKe458",
+	en: "TUhzrgKe458",
+	pt: "TUhzrgKe458",
 };
 
-function updateSentientumVideoLink(lang) {
-	const link = document.querySelector("[data-video-link]");
-	if (!link) {
+function sentientumPosterUrl(videoId, quality) {
+	return `https://i.ytimg.com/vi/${videoId}/${quality}.jpg`;
+}
+
+// Removes the mounted player, if any, and restores the click-to-play facade.
+// This is what keeps a hidden modal from playing audio nobody can see: the
+// iframe must leave the DOM, not just go invisible.
+function teardownSentientumVideo(scope) {
+	const frame = (scope || document).querySelector("[data-video-frame]");
+	if (!frame) {
 		return;
 	}
 
-	const href = sentientumVideos[lang] || sentientumVideos.es;
-	link.href = href;
+	const iframe = frame.querySelector("iframe");
+	if (iframe) {
+		iframe.remove();
+	}
+
+	const poster = frame.querySelector("[data-video-poster]");
+	const play = frame.querySelector("[data-video-play]");
+	if (poster) {
+		poster.hidden = false;
+	}
+	if (play) {
+		play.hidden = false;
+	}
+}
+
+function playSentientumVideo() {
+	const frame = document.querySelector("[data-video-frame]");
+	if (!frame || frame.querySelector("iframe")) {
+		return;
+	}
+
+	const videoId = frame.dataset.videoId;
+	if (!videoId) {
+		return;
+	}
+
+	const poster = frame.querySelector("[data-video-poster]");
+	const play = frame.querySelector("[data-video-play]");
+	if (poster) {
+		poster.hidden = true;
+	}
+	if (play) {
+		play.hidden = true;
+	}
+
+	const iframe = document.createElement("iframe");
+	iframe.className = "modal-video-iframe";
+	iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
+	iframe.title = play ? play.textContent.trim() : "Sentientum";
+	iframe.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
+	iframe.allowFullscreen = true;
+	iframe.loading = "lazy";
+	frame.appendChild(iframe);
+
+	// Focus the frame, not the iframe. A cross-origin player keeps every key it
+	// receives, so focus parked inside it means Escape never reaches this
+	// document and the dialog stops closing. From the frame the trap still sees
+	// Escape, and Tab still walks into the player.
+	frame.focus();
+}
+
+function updateSentientumVideo(lang) {
+	const frame = document.querySelector("[data-video-frame]");
+	if (!frame) {
+		return;
+	}
+
+	// A language switch mid-playback must not leave a player mounted under a
+	// label that no longer matches it.
+	teardownSentientumVideo();
+
+	const videoId = sentientumVideos[lang] || sentientumVideos.es;
+	frame.dataset.videoId = videoId;
+
+	const poster = frame.querySelector("[data-video-poster]");
+	if (poster) {
+		poster.dataset.fallback = "";
+		poster.src = sentientumPosterUrl(videoId, "maxresdefault");
+	}
 
 	// Told, not hidden: someone who picked English and gets a Spanish video
 	// should learn that from the page rather than from the first ten seconds
 	// of the video.
 	const note = document.querySelector("[data-video-note]");
 	if (note) {
-		note.hidden = lang === "es" || href !== sentientumVideos.es;
+		note.hidden = lang === "es" || videoId !== sentientumVideos.es;
 	}
+}
+
+// Not every upload has a maxresdefault thumbnail; fall back to the thumbnail
+// size YouTube always generates.
+const sentientumVideoPoster = document.querySelector("[data-video-poster]");
+if (sentientumVideoPoster) {
+	sentientumVideoPoster.addEventListener("error", () => {
+		if (sentientumVideoPoster.dataset.fallback === "hqdefault") {
+			return;
+		}
+		sentientumVideoPoster.dataset.fallback = "hqdefault";
+		const videoId = sentientumVideoPoster.closest("[data-video-frame]")?.dataset.videoId;
+		if (videoId) {
+			sentientumVideoPoster.src = sentientumPosterUrl(videoId, "hqdefault");
+		}
+	});
+}
+
+const sentientumVideoPlay = document.querySelector("[data-video-play]");
+if (sentientumVideoPlay) {
+	sentientumVideoPlay.addEventListener("click", playSentientumVideo);
 }
 
 const savedLanguage = window.localStorage.getItem("scapder-language");
@@ -704,13 +802,16 @@ document.querySelectorAll("[data-modal-open]").forEach((trigger) => {
 
 	const panel = modal.querySelector(".modal-panel");
 	const focusable = () =>
-		[...modal.querySelectorAll('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])')].filter(
+		[...modal.querySelectorAll('a[href], iframe, button:not([disabled]), [tabindex]:not([tabindex="-1"])')].filter(
 			(node) => node.offsetParent !== null,
 		);
 
 	const close = () => {
 		modal.hidden = true;
 		document.body.style.removeProperty("overflow");
+		// A hidden modal must not keep playing audio: tear down any mounted
+		// video player scoped to this modal before handing focus back.
+		teardownSentientumVideo(modal);
 		trigger.focus();
 	};
 
