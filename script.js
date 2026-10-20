@@ -735,6 +735,136 @@ if (nav && navButton) {
 	});
 }
 
+// ── Purposeful motion ──
+//
+// system.md allows two moments that need script: the Edge Sight slider teaching
+// itself, and case metrics appearing when first read. (The hero entrance and the
+// robot focus are CSS-only, behind the same html.motion class.) Both run once,
+// stop watching the page afterwards, and never run at all when the head gate
+// left html.motion off (reduced motion) or when IntersectionObserver is missing.
+function motionEnabled() {
+	return (
+		document.documentElement.classList.contains("motion") &&
+		"IntersectionObserver" in window &&
+		window.matchMedia("(prefers-reduced-motion: no-preference)").matches
+	);
+}
+
+const easeInOut = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+
+// Sweeps the range from its current value to 65, then 35, then back (1.4s).
+// `apply` is the slider's own update path, so the picture and the input value
+// stay in sync. Setting `.value` fires no event, so nothing is announced.
+function demonstrateComparison(range, apply) {
+	if (!motionEnabled()) {
+		return;
+	}
+
+	const origin = Number(range.value);
+	const legs = [
+		{ to: 65, duration: 400 },
+		{ to: 35, duration: 500 },
+		{ to: origin, duration: 500 },
+	];
+	const cancelEvents = ["pointerdown", "keydown", "focus", "input"];
+	let frame = 0;
+	let started = false;
+	let done = false;
+
+	const stop = () => {
+		if (done) {
+			return;
+		}
+		done = true;
+		cancelAnimationFrame(frame);
+		observer.disconnect();
+		cancelEvents.forEach((type) => range.removeEventListener(type, stop));
+	};
+
+	const run = () => {
+		started = true;
+		const begin = performance.now();
+		let from = origin;
+		let legStart = begin;
+		let index = 0;
+
+		const step = (now) => {
+			if (done) {
+				return;
+			}
+			const leg = legs[index];
+			const progress = Math.min((now - legStart) / leg.duration, 1);
+			range.value = String(from + (leg.to - from) * easeInOut(progress));
+			apply();
+
+			if (progress < 1) {
+				frame = requestAnimationFrame(step);
+				return;
+			}
+			if (index === legs.length - 1) {
+				range.value = String(origin);
+				apply();
+				stop();
+				return;
+			}
+			from = leg.to;
+			legStart = now;
+			index += 1;
+			frame = requestAnimationFrame(step);
+		};
+
+		frame = requestAnimationFrame(step);
+	};
+
+	const observer = new IntersectionObserver(
+		(entries) => {
+			const entry = entries[entries.length - 1];
+			if (!started && entry.intersectionRatio >= 0.5) {
+				run();
+			} else if (started && entry.intersectionRatio < 0.1) {
+				// Scrolled away mid-demo: leave the slider where it started.
+				range.value = String(origin);
+				apply();
+				stop();
+			}
+		},
+		{ threshold: [0.1, 0.5] },
+	);
+
+	cancelEvents.forEach((type) => range.addEventListener(type, stop));
+	observer.observe(range.closest("[data-comparison]") || range.closest(".comparison-card") || range);
+}
+
+// Case metrics fade in (with a small stagger, via CSS) the first time their card
+// is read. The numbers are never rewritten: the text in the DOM is always the
+// final text, so there is no counting and nothing to mis-announce.
+function revealCaseMetrics() {
+	if (!motionEnabled()) {
+		return;
+	}
+
+	const cards = document.querySelectorAll(".case-card");
+	const observer = new IntersectionObserver(
+		(entries) => {
+			entries.forEach((entry) => {
+				if (!entry.isIntersecting) {
+					return;
+				}
+				entry.target.classList.add("metrics-in");
+				observer.unobserve(entry.target);
+			});
+		},
+		{ threshold: 0.3 },
+	);
+
+	cards.forEach((card) => {
+		card.classList.add("metrics-armed");
+		observer.observe(card);
+	});
+}
+
+revealCaseMetrics();
+
 const comparison = document.querySelector("[data-comparison]");
 const comparisonRange = document.querySelector("[data-comparison-range]");
 
@@ -746,6 +876,7 @@ if (comparison && comparisonRange) {
 
 	comparisonRange.addEventListener("input", updateComparison);
 	updateComparison();
+	demonstrateComparison(comparisonRange, updateComparison);
 }
 
 const contactForm = document.querySelector("[data-contact-form]");

@@ -1317,6 +1317,95 @@ h3 {
 	border-color: var(--scapder-ink);
 }
 
+/* ── Purposeful motion (system.md > Motion) ──
+   Four one-shot moments, each with a job: the hero arrives, the robot camera
+   focuses, the comparison slider teaches itself (script.js), and case metrics
+   show up when read. Everything is gated by html.motion, which the head script
+   only sets for visitors who have not asked for reduced motion, so without JS
+   or with reduced motion the page simply renders its final state. Only opacity,
+   transform and filter animate: no layout shift. */
+
+@keyframes hero-enter {
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+@keyframes robot-focus {
+	from {
+		filter: grayscale(1) contrast(1.06) blur(8px);
+		transform: scale(1.03);
+	}
+
+	to {
+		filter: grayscale(1) contrast(1.06) blur(0);
+		transform: none;
+	}
+}
+
+@keyframes metric-enter {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+html.motion .system-line,
+html.motion .hero h1,
+html.motion .hero-lead,
+html.motion .hero-actions,
+html.motion .hero-panel {
+	animation: hero-enter 400ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+html.motion .hero h1 {
+	animation-delay: 80ms;
+}
+
+html.motion .hero-lead {
+	animation-delay: 160ms;
+}
+
+html.motion .hero-actions {
+	animation-delay: 240ms;
+}
+
+html.motion .hero-panel {
+	animation-delay: 320ms;
+}
+
+html.motion .hero-robot {
+	animation: robot-focus 900ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* script.js arms a card only after it is sure it can reveal it. */
+html.motion .case-card.metrics-armed:not(.metrics-in) .case-metrics li {
+	opacity: 0;
+}
+
+html.motion .case-card.metrics-in .case-metrics li {
+	animation: metric-enter 360ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+html.motion .case-card.metrics-in .case-metrics li:nth-child(2) {
+	animation-delay: 80ms;
+}
+
+html.motion .case-card.metrics-in .case-metrics li:nth-child(3) {
+	animation-delay: 160ms;
+}
+
 /* ── Reduced Motion Override ── */
 
 @media (prefers-reduced-motion: reduce) {
