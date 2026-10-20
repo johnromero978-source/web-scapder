@@ -415,14 +415,45 @@ const checks = [
       statSync(resolve(root, "img/hero/robot-gaze-00.webp")).size < 250 * 1024,
   },
   {
-    name: "R2 gaze frames: at least 12 files after frame 00, under 1.6 MB total",
+    name: "R3 gaze frames: at least 30 baked-gray files in img/hero/gaze, under 1.5 MB total, no stale robot-gaze-01+",
     pass: (() => {
-      const dir = resolve(root, "img/hero");
-      const frames = existsSync(dir)
-        ? readdirSync(dir).filter((name) => /^robot-gaze-(?!00)\d\d\.webp$/.test(name))
-        : [];
+      const dir = resolve(root, "img/hero/gaze");
+      const frames = existsSync(dir) ? readdirSync(dir).filter((name) => /^\d\d\.webp$/.test(name)) : [];
       const total = frames.reduce((sum, name) => sum + statSync(resolve(dir, name)).size, 0);
-      return frames.length >= 12 && total < 1.6 * 1024 * 1024;
+      const stale = readdirSync(resolve(root, "img/hero")).filter((name) => /^robot-gaze-(?!00)\d\d\.webp$/.test(name));
+      return frames.length >= 30 && total < 1.5 * 1024 * 1024 && stale.length === 0;
+    })(),
+  },
+  {
+    name: "R3 gaze canvas is a sibling layer after .hero-robot (not inside it), no CSS filter on .hero-gaze",
+    pass: (() => {
+      const start = scriptJs.indexOf("function turnHeroHead");
+      const end = start + scriptJs.slice(start).search(/\r?\n\}\r?\n/);
+      const body = scriptJs.slice(start, end);
+      const css = read("styles.css").replace(/\/\*[\s\S]*?\*\//g, "");
+      const rule = (css.match(/\.hero-gaze\s*\{[^}]*\}/) || [""])[0];
+      return (
+        !/robot\.append\(\s*canvas/.test(body) &&
+        /robot\.after\(\s*canvas/.test(body) &&
+        rule.length > 0 &&
+        !/filter\s*:/.test(rule) &&
+        /opacity:\s*0\.82/.test(rule)
+      );
+    })(),
+  },
+  {
+    name: "R3 renderer: globalAlpha crossfade, ResizeObserver geometry cache, no getComputedStyle, frame-rate-independent easing",
+    pass: (() => {
+      const start = scriptJs.indexOf("function turnHeroHead");
+      const end = start + scriptJs.slice(start).search(/\r?\n\}\r?\n/);
+      const body = scriptJs.slice(start, end);
+      return (
+        body.includes("globalAlpha") &&
+        body.includes("ResizeObserver") &&
+        !body.includes("getComputedStyle") &&
+        body.includes("Math.pow(") &&
+        !/const EASE = 0\.12/.test(body)
+      );
     })(),
   },
   {
@@ -437,8 +468,8 @@ const checks = [
         body.includes("motionEnabled()") &&
         body.includes("(hover: hover) and (pointer: fine)") &&
         body.includes('"load"') &&
-        body.includes("robot-gaze-") &&
-        body.includes(".decode()") &&
+        body.includes("img/hero/gaze/") &&
+        body.includes("decode") &&
         body.includes('"aria-hidden", "true"') &&
         body.includes("pointermove") &&
         body.includes("pointerleave") &&

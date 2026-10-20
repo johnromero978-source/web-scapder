@@ -1019,20 +1019,26 @@ function trackCurrentSection() {
 trackCurrentSection();
 
 // The hero robot turns its head toward the visitor. The photo is frame 0 of a
-// keyframe-locked clip (the robot looking toward the hero text); the other
-// frames are the same clip up to the moment the robot faces the camera. On a
-// desktop with a fine pointer (and no reduced-motion request) the pointer's x
-// position inside the hero picks a frame: over the text the robot looks at the
-// text, toward the right it faces the visitor. The shown frame is eased toward
-// that target, then eases back to frame 0 when the pointer leaves. This is the
-// one pointer-following exception in system.md.
+// keyframe-locked clip (the robot looking toward the hero text); the gaze frames
+// are the same clip from the first movement to the moment the robot faces the
+// camera, with the photo's grayscale + contrast look already baked into their
+// pixels. On a desktop with a fine pointer (and no reduced-motion request) the
+// pointer's x position inside the hero picks a position along the clip: over the
+// text the robot looks at the text, toward the right it faces the visitor. The
+// shown position follows the pointer with frame-rate-independent easing and is
+// drawn as a crossfade between the two neighbouring frames, so the motion is
+// continuous. It eases back to frame 0 when the pointer leaves. This is the one
+// pointer-following exception in system.md.
 //
-// Frames are fetched only after `load`, decoded, and the canvas replaces the
-// background only once all of them are ready and the lens focus entrance has
-// finished, so there is no half-loaded state. The canvas sits inside
-// `.hero-robot` (same filter, opacity and entrance) and uses the same cover +
-// position math as the CSS background, so frame 0 on the canvas matches the
-// photo. Touch, reduced-motion and no-JS visitors download no frames.
+// Frames are fetched only after `load` and decoded off the main thread; the
+// canvas replaces the background only once all of them are ready and the lens
+// focus entrance has finished, so there is no half-loaded state. The canvas is
+// a sibling layer right after `.hero-robot` (same box and opacity, no CSS
+// filter), so repainting it never re-runs a filtered layer. The canvas bitmap
+// has the frames' native size, so every draw is an unscaled 1:1 blit; CSS
+// (object-fit: cover + the photo's object-position) does the cover scaling in
+// the compositor. Only the hero's box is measured, on resize. Touch,
+// reduced-motion and no-JS visitors download no gaze frames.
 function turnHeroHead() {
 	const hero = document.querySelector(".hero");
 	const robot = document.querySelector(".hero-robot");
@@ -1046,33 +1052,47 @@ function turnHeroHead() {
 		return;
 	}
 
-	const FRAME_COUNT = 18;
+	const FRAME_COUNT = 37;
+	const LAST_FRAME = FRAME_COUNT - 1;
 	const LEFT_EDGE = 0.35; // pointer x (share of hero width) at or below which the robot looks at the text.
 	const RIGHT_EDGE = 0.75; // pointer x at or beyond which the robot faces the visitor.
-	const EASE = 0.12;
-	const MAX_CANVAS_WIDTH = 2400;
+	const FOLLOW = 0.25; // share of the remaining distance covered per 60 fps frame.
+	const SETTLE = 0.01; // frames; closer than this snaps to the target and stops.
 
-	const frameUrl = (index) => `img/hero/robot-gaze-${String(index).padStart(2, "0")}.webp`;
+	const frameUrl = (index) => `img/hero/gaze/${String(index).padStart(2, "0")}.webp`;
+
+	const decodeFrame = (index) => {
+		if (typeof createImageBitmap === "function") {
+			return fetch(frameUrl(index))
+				.then((response) => {
+					if (!response.ok) {
+						throw new Error(`gaze frame ${index}`);
+					}
+					return response.blob();
+				})
+				.then((blob) => createImageBitmap(blob));
+		}
+
+		const image = new Image();
+		image.src = frameUrl(index);
+		return image.decode().then(() => image);
+	};
 
 	const load = () => {
-		const decoded = Array.from({ length: FRAME_COUNT }, (_, index) => {
-			const image = new Image();
-			image.src = frameUrl(index);
-			return image.decode().then(() => image);
-		});
+		const decoded = Array.from({ length: FRAME_COUNT }, (_, index) => decodeFrame(index));
 		const focusing = typeof robot.getAnimations === "function" ? robot.getAnimations() : [];
 		const focused = Promise.all(
 			focusing.map((animation) => animation.finished.catch(() => undefined)),
 		);
 
 		Promise.all([Promise.all(decoded), focused])
-			.then(([images]) => activate(images))
+			.then(([frames]) => activate(frames))
 			.catch(() => undefined);
 	};
 
-	const activate = (images) => {
+	const activate = (frames) => {
 		const canvas = document.createElement("canvas");
-		const context = canvas.getContext("2d");
+		const context = canvas.getContext("2d", { alpha: false });
 
 		if (!context) {
 			return;
@@ -1080,71 +1100,66 @@ function turnHeroHead() {
 
 		canvas.className = "hero-gaze";
 		canvas.setAttribute("aria-hidden", "true");
-		context.imageSmoothingQuality = "high";
 
-		let current = 0; // eased, fractional frame position.
+		canvas.width = frames[0].naturalWidth || frames[0].width;
+		canvas.height = frames[0].naturalHeight || frames[0].height;
+
+		let current = 0; // eased, fractional position along the frames.
 		let target = 0;
 		let drawn = -1;
-		let pointerX = null;
 		let visible = true;
 		let frame = 0;
+		let last = 0;
+		let heroLeft = 0;
+		let heroWidth = 1;
 
-		const paint = (index) => {
-			const image = images[index];
-			const width = robot.clientWidth;
-			const height = robot.clientHeight;
-			const ratio = Math.min(window.devicePixelRatio || 1, 2, MAX_CANVAS_WIDTH / width);
-			const pixelWidth = Math.round(width * ratio);
-			const pixelHeight = Math.round(height * ratio);
+		// Crossfade between the two neighbouring frames for a continuous turn.
+		const draw = (position) => {
+			const base = Math.min(LAST_FRAME, Math.floor(position));
+			const mix = position - base;
 
-			if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
-				canvas.width = pixelWidth;
-				canvas.height = pixelHeight;
-				context.imageSmoothingQuality = "high";
+			context.globalAlpha = 1;
+			context.drawImage(frames[base], 0, 0);
+
+			if (mix > 0.004 && base < LAST_FRAME) {
+				context.globalAlpha = mix;
+				context.drawImage(frames[base + 1], 0, 0);
+				context.globalAlpha = 1;
 			}
 
-			const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
-			const [posX, posY] = window
-				.getComputedStyle(robot)
-				.backgroundPosition.split(" ")
-				.map((value) => (value.endsWith("%") ? parseFloat(value) / 100 : 0.5));
-			const drawWidth = image.naturalWidth * scale;
-			const drawHeight = image.naturalHeight * scale;
+			drawn = position;
+		};
 
-			context.drawImage(
-				image,
-				(width - drawWidth) * posX * ratio,
-				(height - drawHeight) * posY * ratio,
-				drawWidth * ratio,
-				drawHeight * ratio,
-			);
-			drawn = index;
+		const measure = () => {
+			const rect = hero.getBoundingClientRect();
+			heroLeft = rect.left;
+			heroWidth = rect.width || 1;
 		};
 
 		const targetFor = (x) => {
-			const rect = hero.getBoundingClientRect();
-			const share = (x - rect.left) / rect.width;
+			const share = (x - heroLeft) / heroWidth;
 			const progress = Math.min(1, Math.max(0, (share - LEFT_EDGE) / (RIGHT_EDGE - LEFT_EDGE)));
-			return progress * (FRAME_COUNT - 1);
+			return progress * LAST_FRAME;
 		};
 
-		const tick = () => {
+		const tick = (now) => {
 			frame = 0;
-			target = pointerX === null ? 0 : targetFor(pointerX);
-			current += (target - current) * EASE;
+			const dt = last ? Math.min(now - last, 64) : 16.67;
+			last = now;
+			current += (target - current) * (1 - Math.pow(1 - FOLLOW, dt / 16.67));
 
-			if (Math.abs(target - current) < 0.02) {
+			if (Math.abs(target - current) < SETTLE) {
 				current = target;
 			}
 
-			const index = Math.round(current);
-
-			if (index !== drawn) {
-				paint(index);
+			if (Math.abs(current - drawn) >= 0.01 || (current === target && current !== drawn)) {
+				draw(current);
 			}
 
 			if (current !== target && visible) {
 				frame = window.requestAnimationFrame(tick);
+			} else {
+				last = 0;
 			}
 		};
 
@@ -1160,14 +1175,14 @@ function turnHeroHead() {
 				if (event.pointerType === "touch") {
 					return;
 				}
-				pointerX = event.clientX;
+				target = targetFor(event.clientX);
 				wake();
 			},
 			{ passive: true },
 		);
 
 		hero.addEventListener("pointerleave", () => {
-			pointerX = null;
+			target = 0;
 			wake();
 		});
 
@@ -1175,24 +1190,33 @@ function turnHeroHead() {
 			visible = entries[entries.length - 1].isIntersecting;
 
 			if (!visible) {
-				pointerX = null;
 				window.cancelAnimationFrame(frame);
 				frame = 0;
+				last = 0;
 				current = 0;
 				target = 0;
-				paint(0);
+				draw(0);
 			}
 		}).observe(hero);
 
-		const repaint = () => paint(Math.max(drawn, 0));
+		measure();
+		draw(0);
 
 		if ("ResizeObserver" in window) {
-			new ResizeObserver(repaint).observe(robot);
+			new ResizeObserver(measure).observe(hero);
+		} else {
+			window.addEventListener("resize", measure);
 		}
-		window.addEventListener("resize", repaint);
 
-		paint(0);
-		robot.append(canvas);
+		// The canvas fades in over the photo; once it is opaque the photo underneath is dropped.
+		canvas.addEventListener(
+			"animationend",
+			() => {
+				robot.classList.add("is-replaced");
+			},
+			{ once: true },
+		);
+		robot.after(canvas);
 	};
 
 	if (document.readyState === "complete") {
