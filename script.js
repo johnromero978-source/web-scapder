@@ -89,10 +89,10 @@ const translations = {
 		edgePillarTwo: "Tiempo Real",
 		edgePillarThree: "Soberanía de Datos",
 		sentientumCategory: "Audiencias Sintéticas · AI Agents",
-		sentientumOneLiner: "Simulación predictiva para ensayar el futuro hoy.",
-		sentientumPillarOne: "Simulación",
-		sentientumPillarTwo: "Escala",
-		sentientumPillarThree: "Sin riesgo",
+		sentientumOneLiner: "Cuarenta voces sintéticas discuten una decisión y la pantalla muestra cómo llegan a una conclusión.",
+		sentientumPillarOne: "40 voces sintéticas",
+		sentientumPillarTwo: "5 pasos",
+		sentientumPillarThree: "Datos de ejemplo",
 		mlspecCategory: "MLOps · Gobernanza de IA",
 		mlspecOneLiner: "Sistema operativo para escalar modelos de ML.",
 		mlspecPillarOne: "Lab a producción",
@@ -125,8 +125,8 @@ const translations = {
 		contactLead:
 			"Si tu organización tiene datos dispersos, infraestructura existente o modelos que necesitan llegar a operación, scapder puede ayudarte a convertirlos en inteligencia accionable.",
 		footerTagline: "Transformar datos en inteligencia accionable.",
-		sentientumDemoCta: "Conocer Sentientum",
-		sentientumDemoLabel: "Conocer Sentientum",
+		sentientumDemoCta: "Ver la bandada",
+		sentientumDemoLabel: "Ver la bandada de Sentientum",
 		contactEmailLabel: "Email",
 		contactWhatsAppLabel: "WhatsApp",
 		contactFormName: "Nombre",
@@ -170,39 +170,10 @@ const translations = {
 		teamMember04Role: "Product & Business Development",
 		teamMember04ImageAlt: "Joshua De La Pava",
 		teamMember04LinkedInLabel: "Abrir el perfil de LinkedIn de Joshua De La Pava",
-		stvVideoFallback:
-			"Este recorrido está grabado en español. Las versiones en inglés y portugués están en producción.",
-		stvStepZeroTitle: "La Constitución",
-		stvStepZeroPlain:
-			"Es darle a un guionista una sinopsis y una lista de nombres. El elenco lo arma él.",
-		stvStepOneTitle: "El grafo",
-		stvStepOnePlain:
-			"Dibuja el organigrama invisible: quién conoce a quién, quién le responde a quién, antes de que nadie diga una palabra.",
-		stvStepTwoTitle: "El elenco",
-		stvStepTwoPlain:
-			"Casting completo. A cada personaje se le escribe una historia y una agenda, porque nadie discute las veinticuatro horas.",
-		stvStepThreeTitle: "La corrida",
-		stvStepThreePlain:
-			"Una obra de teatro con guión abierto: los actores improvisan dentro de su personaje, ronda tras ronda.",
-		stvStepFourTitle: "El informe",
-		stvStepFourPlain:
-			"El informe que llevarías a un directorio: qué pasó, quién dijo qué, y con qué evidencia.",
-		stvStepFiveTitle: "Las preguntas",
-		stvStepFivePlain:
-			"Terminada la función, podés sentarte con un personaje y preguntarle por qué hizo lo que hizo.",
-		stvProofBody:
-			"Cada afirmación del informe apunta a un mensaje concreto de un agente concreto. Si algo no se puede citar, el sistema lo marca en lugar de afirmarlo.",
-		stvFactAgentsLabel: "Agentes",
-		stvFactRoundsLabel: "Rondas",
-		stvFactActionsLabel: "Acciones registradas",
-		stvFactCitationLabel: "Afirmaciones con cita",
 		modalCloseLabel: "Cerrar",
-		stvModalLede: "Escribís un documento con las reglas de un mundo y la pregunta que querés poner a prueba. Sentientum arma la población que vive en ese mundo y la deja discutir.",
-		stvModalStepsLabel: "Seis pasos. Uno solo lo escribís vos.",
-		stvModalProofLabel: "Una corrida real, publicada sin editar",
-		stvModalVideoCta: "Ver el recorrido",
-		stvModalVideoAlt: "Vista previa del recorrido en video de Sentientum",
-		stvModalRunCta: "Abrir la corrida",
+		bandadaLede: "Del murmullo a la conclusión. Opinión sintética, no pronóstico.",
+		bandadaFullscreen: "Abrir en pantalla completa",
+		bandadaFrameTitle: "Sentientum · del murmullo a la conclusión",
 	},
 	en: {
 		skip: "Skip to main content",
@@ -290,10 +261,10 @@ const translations = {
 		edgePillarTwo: "Real Time",
 		edgePillarThree: "Data Sovereignty",
 		sentientumCategory: "Synthetic Audiences · AI Agents",
-		sentientumOneLiner: "Predictive simulation to rehearse the future today.",
-		sentientumPillarOne: "Simulation",
-		sentientumPillarTwo: "Scale",
-		sentientumPillarThree: "No risk",
+		sentientumOneLiner: "Forty synthetic voices debate a decision and the screen shows how they reach a conclusion.",
+		sentientumPillarOne: "40 synthetic voices",
+		sentientumPillarTwo: "5 steps",
+		sentientumPillarThree: "Sample data",
 		mlspecCategory: "MLOps · AI Governance",
 		mlspecOneLiner: "An operating system for scaling ML models.",
 		mlspecPillarOne: "Lab to production",
@@ -326,8 +297,8 @@ const translations = {
 		contactLead:
 			"If your organization has fragmented data, existing infrastructure, or models that need to reach operations, scapder can help turn them into actionable intelligence.",
 		footerTagline: "Turning data into actionable intelligence.",
-		sentientumDemoCta: "Explore Sentientum",
-		sentientumDemoLabel: "Explore Sentientum",
+		sentientumDemoCta: "See the flock",
+		sentientumDemoLabel: "See the Sentientum flock",
 		contactEmailLabel: "Email",
 		contactWhatsAppLabel: "WhatsApp",
 		contactFormName: "Name",
@@ -371,39 +342,10 @@ const translations = {
 		teamMember04Role: "Product & Business Development",
 		teamMember04ImageAlt: "Joshua De La Pava",
 		teamMember04LinkedInLabel: "Open the LinkedIn profile of Joshua De La Pava",
-		stvVideoFallback:
-			"This walkthrough is recorded in Spanish. The English and Portuguese versions are in production.",
-		stvStepZeroTitle: "The Constitution",
-		stvStepZeroPlain:
-			"It is handing a screenwriter a synopsis and a list of names. The cast is theirs to build.",
-		stvStepOneTitle: "The graph",
-		stvStepOnePlain:
-			"It draws the invisible org chart: who knows whom, who answers to whom, before anyone says a word.",
-		stvStepTwoTitle: "The cast",
-		stvStepTwoPlain:
-			"Full casting. Each character gets a history and a calendar, because nobody argues twenty-four hours a day.",
-		stvStepThreeTitle: "The run",
-		stvStepThreePlain:
-			"A play with an open script: the actors improvise inside their character, round after round.",
-		stvStepFourTitle: "The report",
-		stvStepFourPlain:
-			"The report you would take to a board: what happened, who said what, and on what evidence.",
-		stvStepFiveTitle: "The questions",
-		stvStepFivePlain:
-			"Once the show is over, you can sit down with a character and ask why they did what they did.",
-		stvProofBody:
-			"Every claim in the report points at a concrete message from a concrete agent. When something cannot be cited, the system flags it instead of asserting it.",
-		stvFactAgentsLabel: "Agents",
-		stvFactRoundsLabel: "Rounds",
-		stvFactActionsLabel: "Recorded actions",
-		stvFactCitationLabel: "Claims with citations",
 		modalCloseLabel: "Close",
-		stvModalLede: "You write a document with the rules of a world and the question you want to put to the test. Sentientum builds the population that lives in that world and lets it argue.",
-		stvModalStepsLabel: "Six steps. You write only one.",
-		stvModalProofLabel: "A real run, published unedited",
-		stvModalVideoCta: "Watch the walkthrough",
-		stvModalVideoAlt: "Preview of the Sentientum video walkthrough",
-		stvModalRunCta: "Open the run",
+		bandadaLede: "From murmur to conclusion. Synthetic opinion, not a forecast.",
+		bandadaFullscreen: "Open full screen",
+		bandadaFrameTitle: "Sentientum · from murmur to conclusion",
 	},
 	pt: {
 		skip: "Pular para o conteúdo principal",
@@ -494,12 +436,12 @@ const translations = {
 		edgePillarTwo: "Tempo real",
 		edgePillarThree: "Soberania de dados",
 		sentientumCategory: "Audiências Sintéticas · Agentes de IA",
-		sentientumOneLiner: "Simulação preditiva para ensaiar o futuro hoje.",
-		sentientumPillarOne: "Simulação",
-		sentientumPillarTwo: "Escala",
-		sentientumPillarThree: "Sem risco",
-		sentientumDemoCta: "Conhecer o Sentientum",
-		sentientumDemoLabel: "Conhecer o Sentientum",
+		sentientumOneLiner: "Quarenta vozes sintéticas debatem uma decisão e a tela mostra como chegam a uma conclusão.",
+		sentientumPillarOne: "40 vozes sintéticas",
+		sentientumPillarTwo: "5 pasos",
+		sentientumPillarThree: "Dados de exemplo",
+		sentientumDemoCta: "Ver o bando",
+		sentientumDemoLabel: "Ver o bando do Sentientum",
 		mlspecCategory: "MLOps · Governança de IA",
 		mlspecOneLiner: "Sistema operacional para escalar modelos de ML.",
 		mlspecPillarOne: "Lab para produção",
@@ -577,39 +519,10 @@ const translations = {
 		comparisonHelp:
 			"A barra vertical revela a versão com detecção.",
 		comparisonAria: "Ajustar a comparação do Edge Sight AI",
-		stvVideoFallback:
-			"Este percurso foi gravado em espanhol. As versões em inglês e português estão em produção.",
-		stvStepZeroTitle: "A Constituição",
-		stvStepZeroPlain:
-			"É dar a um roteirista uma sinopse e uma lista de nomes. O elenco ele monta.",
-		stvStepOneTitle: "O grafo",
-		stvStepOnePlain:
-			"Desenha o organograma invisível: quem conhece quem, quem responde a quem, antes de alguém dizer uma palavra.",
-		stvStepTwoTitle: "O elenco",
-		stvStepTwoPlain:
-			"Casting completo. Cada personagem ganha uma história e uma agenda, porque ninguém discute vinte e quatro horas por dia.",
-		stvStepThreeTitle: "A execução",
-		stvStepThreePlain:
-			"Uma peça de teatro com roteiro aberto: os atores improvisam dentro do personagem, rodada após rodada.",
-		stvStepFourTitle: "O relatório",
-		stvStepFourPlain:
-			"O relatório que você levaria a um conselho: o que aconteceu, quem disse o quê, e com que evidência.",
-		stvStepFiveTitle: "As perguntas",
-		stvStepFivePlain:
-			"Terminada a apresentação, você pode sentar com um personagem e perguntar por que fez o que fez.",
-		stvProofBody:
-			"Cada afirmação do relatório aponta para uma mensagem concreta de um agente concreto. Quando algo não pode ser citado, o sistema sinaliza em vez de afirmar.",
-		stvFactAgentsLabel: "Agentes",
-		stvFactRoundsLabel: "Rodadas",
-		stvFactActionsLabel: "Ações registradas",
-		stvFactCitationLabel: "Afirmações com citação",
 		modalCloseLabel: "Fechar",
-		stvModalLede: "Você escreve um documento com as regras de um mundo e a pergunta que quer colocar à prova. O Sentientum monta a população que vive nesse mundo e a deixa discutir.",
-		stvModalStepsLabel: "Seis passos. Só um é escrito por você.",
-		stvModalProofLabel: "Uma execução real, publicada sem edição",
-		stvModalVideoCta: "Ver o percurso",
-		stvModalVideoAlt: "Prévia do vídeo do percurso do Sentientum",
-		stvModalRunCta: "Abrir a execução",
+		bandadaLede: "Do murmúrio à conclusão. Opinião sintética, não previsão.",
+		bandadaFullscreen: "Abrir em tela cheia",
+		bandadaFrameTitle: "Sentientum · do murmúrio à conclusão",
 	},
 };
 
@@ -653,130 +566,56 @@ function applyLanguage(lang) {
 
 	window.localStorage.setItem("scapder-language", lang);
 
-	updateSentientumVideo(lang);
+	syncBandada(lang);
 }
 
-// One recording per language. They are the same id today because only the
-// Spanish walkthrough is recorded; the English and Portuguese entries exist so
-// that publishing them is an edit here and nothing else. An entry equal to the
-// Spanish one means "not recorded yet", which is why the note below appears.
-const sentientumVideos = {
-	es: "TUhzrgKe458",
-	en: "TUhzrgKe458",
-	pt: "TUhzrgKe458",
-};
-
-function sentientumPosterUrl(videoId, quality) {
-	return `https://i.ytimg.com/vi/${videoId}/${quality}.jpg`;
+// ── Bandada embed ──
+//
+// The Sentientum dialog shows https://bandada.scapder.com/ in place. The iframe
+// does not exist in the HTML: it is mounted when the dialog opens and removed
+// when it closes, so the page loads nothing from Bandada until someone asks.
+function bandadaUrl(lang) {
+	return `https://bandada.scapder.com/?lang=${encodeURIComponent(lang)}`;
 }
 
-// Removes the mounted player, if any, and restores the click-to-play facade.
-// This is what keeps a hidden modal from playing audio nobody can see: the
-// iframe must leave the DOM, not just go invisible.
-function teardownSentientumVideo(scope) {
-	const frame = (scope || document).querySelector("[data-video-frame]");
-	if (!frame) {
-		return;
-	}
-
-	const iframe = frame.querySelector("iframe");
-	if (iframe) {
-		iframe.remove();
-	}
-
-	const poster = frame.querySelector("[data-video-poster]");
-	const play = frame.querySelector("[data-video-play]");
-	if (poster) {
-		poster.hidden = false;
-	}
-	if (play) {
-		play.hidden = false;
-	}
+function currentLanguage() {
+	const lang = window.localStorage.getItem("scapder-language");
+	return lang === "en" || lang === "pt" ? lang : "es";
 }
 
-function playSentientumVideo() {
-	const frame = document.querySelector("[data-video-frame]");
+function mountBandada() {
+	const frame = document.querySelector("[data-bandada-frame]");
 	if (!frame || frame.querySelector("iframe")) {
 		return;
 	}
 
-	const videoId = frame.dataset.videoId;
-	if (!videoId) {
-		return;
-	}
-
-	const poster = frame.querySelector("[data-video-poster]");
-	const play = frame.querySelector("[data-video-play]");
-	if (poster) {
-		poster.hidden = true;
-	}
-	if (play) {
-		play.hidden = true;
-	}
-
 	const iframe = document.createElement("iframe");
-	iframe.className = "modal-video-iframe";
-	iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
-	iframe.title = play ? play.textContent.trim() : "Sentientum";
-	iframe.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
-	iframe.allowFullscreen = true;
-	iframe.loading = "lazy";
+	iframe.className = "modal-embed-iframe";
+	iframe.src = bandadaUrl(currentLanguage());
+	iframe.title = translations[currentLanguage()].bandadaFrameTitle;
+	iframe.referrerPolicy = "strict-origin-when-cross-origin";
 	frame.appendChild(iframe);
-
-	// Focus the frame, not the iframe. A cross-origin player keeps every key it
-	// receives, so focus parked inside it means Escape never reaches this
-	// document and the dialog stops closing. From the frame the trap still sees
-	// Escape, and Tab still walks into the player.
-	frame.focus();
 }
 
-function updateSentientumVideo(lang) {
-	const frame = document.querySelector("[data-video-frame]");
-	if (!frame) {
-		return;
-	}
-
-	// A language switch mid-playback must not leave a player mounted under a
-	// label that no longer matches it.
-	teardownSentientumVideo();
-
-	const videoId = sentientumVideos[lang] || sentientumVideos.es;
-	frame.dataset.videoId = videoId;
-
-	const poster = frame.querySelector("[data-video-poster]");
-	if (poster) {
-		poster.dataset.fallback = "";
-		poster.src = sentientumPosterUrl(videoId, "maxresdefault");
-	}
-
-	// Told, not hidden: someone who picked English and gets a Spanish video
-	// should learn that from the page rather than from the first ten seconds
-	// of the video.
-	const note = document.querySelector("[data-video-note]");
-	if (note) {
-		note.hidden = lang === "es" || videoId !== sentientumVideos.es;
+function teardownBandada() {
+	const iframe = document.querySelector("[data-bandada-frame] iframe");
+	if (iframe) {
+		iframe.remove();
 	}
 }
 
-// Not every upload has a maxresdefault thumbnail; fall back to the thumbnail
-// size YouTube always generates.
-const sentientumVideoPoster = document.querySelector("[data-video-poster]");
-if (sentientumVideoPoster) {
-	sentientumVideoPoster.addEventListener("error", () => {
-		if (sentientumVideoPoster.dataset.fallback === "hqdefault") {
-			return;
-		}
-		sentientumVideoPoster.dataset.fallback = "hqdefault";
-		const videoId = sentientumVideoPoster.closest("[data-video-frame]")?.dataset.videoId;
-		if (videoId) {
-			sentientumVideoPoster.src = sentientumPosterUrl(videoId, "hqdefault");
-		}
-	});
-}
+// Keeps the full-screen link and any mounted iframe on the page language.
+function syncBandada(lang) {
+	const link = document.querySelector("[data-bandada-fullscreen]");
+	if (link) {
+		link.href = bandadaUrl(lang);
+	}
 
-const sentientumVideoPlay = document.querySelector("[data-video-play]");
-if (sentientumVideoPlay) {
-	sentientumVideoPlay.addEventListener("click", playSentientumVideo);
+	const iframe = document.querySelector("[data-bandada-frame] iframe");
+	if (iframe) {
+		iframe.src = bandadaUrl(lang);
+		iframe.title = translations[lang].bandadaFrameTitle;
+	}
 }
 
 const savedLanguage = window.localStorage.getItem("scapder-language");
@@ -809,9 +648,8 @@ document.querySelectorAll("[data-modal-open]").forEach((trigger) => {
 	const close = () => {
 		modal.hidden = true;
 		document.body.style.removeProperty("overflow");
-		// A hidden modal must not keep playing audio: tear down any mounted
-		// video player scoped to this modal before handing focus back.
-		teardownSentientumVideo(modal);
+		// Unmount the embed: a hidden dialog must not keep a live app running.
+		teardownBandada();
 		trigger.focus();
 	};
 
@@ -853,9 +691,12 @@ document.querySelectorAll("[data-modal-open]").forEach((trigger) => {
 		if (panel) {
 			panel.scrollTop = 0;
 		}
-		const [firstFocusable] = focusable();
-		if (firstFocusable) {
-			firstFocusable.focus();
+		mountBandada();
+		// The close button, never the iframe: focus parked inside a cross-origin
+		// frame swallows keys and Escape would stop closing the dialog.
+		const closeButton = modal.querySelector(".modal-close");
+		if (closeButton) {
+			closeButton.focus();
 		}
 	});
 

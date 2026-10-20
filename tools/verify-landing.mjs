@@ -78,11 +78,32 @@ const checks = [
       scriptJs.includes('event.key !== "Tab"'),
   },
   {
-    name: "walkthrough link is per language and falls back honestly",
+    // The card used to open a YouTube walkthrough. Bandada replaced it, so the
+    // old plumbing must be gone rather than lingering as dead code.
+    name: "video walkthrough plumbing is gone",
     pass:
-      indexHtml.includes("data-video-link") &&
-      indexHtml.includes("data-video-note") &&
-      /const sentientumVideos = \{[^}]*\bes:[^}]*\ben:[^}]*\bpt:/s.test(scriptJs),
+      !/youtube|ytimg|sentientumVideos|fly\.dev|data-video|btn-youtube/i.test(indexHtml) &&
+      !/youtube|ytimg|sentientumVideos|fly\.dev|data-video|playSentientumVideo/i.test(scriptJs),
+  },
+  {
+    name: "Bandada iframe is mounted on open with a per-language URL, not in the HTML",
+    pass:
+      scriptJs.includes("bandada.scapder.com/?lang=") &&
+      !/<iframe/i.test(indexHtml) &&
+      indexHtml.includes("data-bandada-frame") &&
+      indexHtml.includes("data-bandada-fullscreen"),
+  },
+  {
+    // A cross-origin iframe in the dialog must be reachable by the Tab trap,
+    // and must never take programmatic focus (it would swallow Escape).
+    name: "focus trap covers the iframe and never focuses it directly",
+    pass:
+      /querySelectorAll\('[^']*iframe[^']*'\)/.test(scriptJs) &&
+      !/iframe\.focus\(/.test(scriptJs),
+  },
+  {
+    name: "no hover lift (system.md)",
+    pass: !read("styles.css").includes("translateY(-2px)"),
   },
   {
     // Every string the page renders must exist in all three dictionaries, or
