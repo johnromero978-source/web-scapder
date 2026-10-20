@@ -1018,15 +1018,22 @@ function trackCurrentSection() {
 
 trackCurrentSection();
 
-// The hero photo shows a robot with two camera lenses. On a desktop with a fine
-// pointer (and no reduced-motion request) a dark pupil with a glint sits over
-// each lens and drifts at most 8px toward the cursor, eased, then settles back
-// when the cursor leaves. This is the one pointer-following exception in
-// system.md. The pupils are placed from the lens centres in the photo's own
-// 2000x1116 pixels, mapped through the same cover + position math the CSS uses,
-// and re-placed on resize. Everything is created here, so touch, reduced-motion
-// and no-JS visitors get the plain photo and no listeners.
-function followHeroEyes() {
+// The hero robot turns its head toward the visitor. The photo is frame 0 of a
+// keyframe-locked clip (the robot looking toward the hero text); the other
+// frames are the same clip up to the moment the robot faces the camera. On a
+// desktop with a fine pointer (and no reduced-motion request) the pointer's x
+// position inside the hero picks a frame: over the text the robot looks at the
+// text, toward the right it faces the visitor. The shown frame is eased toward
+// that target, then eases back to frame 0 when the pointer leaves. This is the
+// one pointer-following exception in system.md.
+//
+// Frames are fetched only after `load`, decoded, and the canvas replaces the
+// background only once all of them are ready and the lens focus entrance has
+// finished, so there is no half-loaded state. The canvas sits inside
+// `.hero-robot` (same filter, opacity and entrance) and uses the same cover +
+// position math as the CSS background, so frame 0 on the canvas matches the
+// photo. Touch, reduced-motion and no-JS visitors download no frames.
+function turnHeroHead() {
 	const hero = document.querySelector(".hero");
 	const robot = document.querySelector(".hero-robot");
 
@@ -1039,145 +1046,163 @@ function followHeroEyes() {
 		return;
 	}
 
-	const IMAGE = { width: 2000, height: 1116 };
-	const LENSES = [
-		{ x: 912, y: 438, radius: 32 },
-		{ x: 1471, y: 353, radius: 32 },
-	];
-	const MAX_SHIFT = 6; // px for the pupil; the glint adds up to 1.5px more.
-	const REACH = 360; // px of cursor distance at which the full shift is reached.
-	const EASE = 0.14;
+	const FRAME_COUNT = 18;
+	const LEFT_EDGE = 0.35; // pointer x (share of hero width) at or below which the robot looks at the text.
+	const RIGHT_EDGE = 0.75; // pointer x at or beyond which the robot faces the visitor.
+	const EASE = 0.12;
+	const MAX_CANVAS_WIDTH = 2400;
 
-	const layer = document.createElement("div");
-	layer.className = "hero-eyes";
-	layer.setAttribute("aria-hidden", "true");
+	const frameUrl = (index) => `img/hero/robot-gaze-${String(index).padStart(2, "0")}.webp`;
 
-	const eyes = LENSES.map((lens) => {
-		const element = document.createElement("div");
-		element.className = "hero-eye";
-		layer.append(element);
-		return { lens, element, cx: 0, cy: 0, x: 0, y: 0 };
-	});
-
-	robot.after(layer);
-
-	const place = () => {
-		const width = robot.offsetWidth;
-		const height = robot.offsetHeight;
-		const scale = Math.max(width / IMAGE.width, height / IMAGE.height);
-		const [posX, posY] = window
-			.getComputedStyle(robot)
-			.backgroundPosition.split(" ")
-			.map((value) => (value.endsWith("%") ? parseFloat(value) / 100 : 0.5));
-		const offsetX = (width - IMAGE.width * scale) * posX;
-		const offsetY = (height - IMAGE.height * scale) * posY;
-
-		eyes.forEach((eye) => {
-			const size = eye.lens.radius * 2 * scale;
-			eye.cx = offsetX + eye.lens.x * scale;
-			eye.cy = offsetY + eye.lens.y * scale;
-			eye.element.style.width = `${size}px`;
-			eye.element.style.height = `${size}px`;
-			eye.element.style.left = `${eye.cx - size / 2}px`;
-			eye.element.style.top = `${eye.cy - size / 2}px`;
+	const load = () => {
+		const decoded = Array.from({ length: FRAME_COUNT }, (_, index) => {
+			const image = new Image();
+			image.src = frameUrl(index);
+			return image.decode().then(() => image);
 		});
+		const focusing = typeof robot.getAnimations === "function" ? robot.getAnimations() : [];
+		const focused = Promise.all(
+			focusing.map((animation) => animation.finished.catch(() => undefined)),
+		);
+
+		Promise.all([Promise.all(decoded), focused])
+			.then(([images]) => activate(images))
+			.catch(() => undefined);
 	};
 
-	const apply = (eye) => {
-		eye.element.style.transform = `translate(${eye.x.toFixed(2)}px, ${eye.y.toFixed(2)}px)`;
-		eye.element.style.setProperty("--glint-x", `${(eye.x * 0.25).toFixed(2)}px`);
-		eye.element.style.setProperty("--glint-y", `${(eye.y * 0.25).toFixed(2)}px`);
-	};
+	const activate = (images) => {
+		const canvas = document.createElement("canvas");
+		const context = canvas.getContext("2d");
 
-	let pointer = null;
-	let visible = true;
-	let frame = 0;
-
-	const tick = () => {
-		frame = 0;
-		const rect = layer.getBoundingClientRect();
-		let moving = false;
-
-		eyes.forEach((eye) => {
-			let targetX = 0;
-			let targetY = 0;
-
-			if (pointer) {
-				const dx = pointer.x - (rect.left + eye.cx);
-				const dy = pointer.y - (rect.top + eye.cy);
-				const distance = Math.hypot(dx, dy) || 1;
-				const reach = Math.min(1, distance / REACH);
-				targetX = (dx / distance) * MAX_SHIFT * reach;
-				targetY = (dy / distance) * MAX_SHIFT * reach;
-			}
-
-			eye.x += (targetX - eye.x) * EASE;
-			eye.y += (targetY - eye.y) * EASE;
-
-			if (Math.abs(targetX - eye.x) > 0.02 || Math.abs(targetY - eye.y) > 0.02) {
-				moving = true;
-			}
-
-			apply(eye);
-		});
-
-		if (moving && visible) {
-			frame = window.requestAnimationFrame(tick);
+		if (!context) {
+			return;
 		}
-	};
 
-	const wake = () => {
-		if (!frame && visible) {
-			frame = window.requestAnimationFrame(tick);
-		}
-	};
+		canvas.className = "hero-gaze";
+		canvas.setAttribute("aria-hidden", "true");
+		context.imageSmoothingQuality = "high";
 
-	hero.addEventListener(
-		"pointermove",
-		(event) => {
-			if (event.pointerType === "touch") {
-				return;
+		let current = 0; // eased, fractional frame position.
+		let target = 0;
+		let drawn = -1;
+		let pointerX = null;
+		let visible = true;
+		let frame = 0;
+
+		const paint = (index) => {
+			const image = images[index];
+			const width = robot.clientWidth;
+			const height = robot.clientHeight;
+			const ratio = Math.min(window.devicePixelRatio || 1, 2, MAX_CANVAS_WIDTH / width);
+			const pixelWidth = Math.round(width * ratio);
+			const pixelHeight = Math.round(height * ratio);
+
+			if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
+				canvas.width = pixelWidth;
+				canvas.height = pixelHeight;
+				context.imageSmoothingQuality = "high";
 			}
-			pointer = { x: event.clientX, y: event.clientY };
-			wake();
-		},
-		{ passive: true },
-	);
 
-	hero.addEventListener("pointerleave", () => {
-		pointer = null;
-		wake();
-	});
+			const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
+			const [posX, posY] = window
+				.getComputedStyle(robot)
+				.backgroundPosition.split(" ")
+				.map((value) => (value.endsWith("%") ? parseFloat(value) / 100 : 0.5));
+			const drawWidth = image.naturalWidth * scale;
+			const drawHeight = image.naturalHeight * scale;
 
-	new IntersectionObserver((entries) => {
-		visible = entries[entries.length - 1].isIntersecting;
+			context.drawImage(
+				image,
+				(width - drawWidth) * posX * ratio,
+				(height - drawHeight) * posY * ratio,
+				drawWidth * ratio,
+				drawHeight * ratio,
+			);
+			drawn = index;
+		};
 
-		if (!visible) {
-			pointer = null;
-			window.cancelAnimationFrame(frame);
+		const targetFor = (x) => {
+			const rect = hero.getBoundingClientRect();
+			const share = (x - rect.left) / rect.width;
+			const progress = Math.min(1, Math.max(0, (share - LEFT_EDGE) / (RIGHT_EDGE - LEFT_EDGE)));
+			return progress * (FRAME_COUNT - 1);
+		};
+
+		const tick = () => {
 			frame = 0;
-			eyes.forEach((eye) => {
-				eye.x = 0;
-				eye.y = 0;
-				apply(eye);
-			});
+			target = pointerX === null ? 0 : targetFor(pointerX);
+			current += (target - current) * EASE;
+
+			if (Math.abs(target - current) < 0.02) {
+				current = target;
+			}
+
+			const index = Math.round(current);
+
+			if (index !== drawn) {
+				paint(index);
+			}
+
+			if (current !== target && visible) {
+				frame = window.requestAnimationFrame(tick);
+			}
+		};
+
+		const wake = () => {
+			if (!frame && visible) {
+				frame = window.requestAnimationFrame(tick);
+			}
+		};
+
+		hero.addEventListener(
+			"pointermove",
+			(event) => {
+				if (event.pointerType === "touch") {
+					return;
+				}
+				pointerX = event.clientX;
+				wake();
+			},
+			{ passive: true },
+		);
+
+		hero.addEventListener("pointerleave", () => {
+			pointerX = null;
+			wake();
+		});
+
+		new IntersectionObserver((entries) => {
+			visible = entries[entries.length - 1].isIntersecting;
+
+			if (!visible) {
+				pointerX = null;
+				window.cancelAnimationFrame(frame);
+				frame = 0;
+				current = 0;
+				target = 0;
+				paint(0);
+			}
+		}).observe(hero);
+
+		const repaint = () => paint(Math.max(drawn, 0));
+
+		if ("ResizeObserver" in window) {
+			new ResizeObserver(repaint).observe(robot);
 		}
-	}).observe(hero);
+		window.addEventListener("resize", repaint);
 
-	if ("ResizeObserver" in window) {
-		new ResizeObserver(place).observe(robot);
+		paint(0);
+		robot.append(canvas);
+	};
+
+	if (document.readyState === "complete") {
+		load();
+	} else {
+		window.addEventListener("load", load, { once: true });
 	}
-	window.addEventListener("resize", place);
-	place();
-
-	// Show the pupils once the lens focus (CSS animation on the photo) is done.
-	const focusing = typeof robot.getAnimations === "function" ? robot.getAnimations() : [];
-	Promise.all(focusing.map((animation) => animation.finished.catch(() => undefined))).then(() => {
-		layer.classList.add("is-ready");
-	});
 }
 
-followHeroEyes();
+turnHeroHead();
 
 const comparison = document.querySelector("[data-comparison]");
 const comparisonRange = document.querySelector("[data-comparison-range]");
