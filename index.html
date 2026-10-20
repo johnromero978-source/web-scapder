@@ -74,17 +74,13 @@
       // Motion gate: runs before first paint so entrances can start on frame one.
       // Without JS, or with reduced motion, the class is never set and every
       // element simply renders in its final state.
-      // Slow-looking devices (few cores, little memory, data saver) also get
-      // html.motion-lite: the calm version. script.js may add it later if the
-      // page measures slow frames while idle.
+      // Very low-memory devices and the data saver also get html.motion-lite: the
+      // calm version. Core count is not used (Brave randomises it). script.js may
+      // add motion-lite later if the visitor's own idle or scroll frames run slow.
       if (window.matchMedia("(prefers-reduced-motion: no-preference)").matches) {
         (function (root, device) {
           root.classList.add("motion");
-          if (
-            device.hardwareConcurrency <= 4 ||
-            device.deviceMemory <= 4 ||
-            (device.connection && device.connection.saveData)
-          ) {
+          if (device.deviceMemory <= 2 || (device.connection && device.connection.saveData)) {
             root.classList.add("motion-lite");
           }
         })(document.documentElement, navigator);

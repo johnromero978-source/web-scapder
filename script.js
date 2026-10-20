@@ -780,25 +780,8 @@ function sampleFrameRate() {
 			return;
 		}
 
-		// An idle page renders cheaply even on a slow CPU, so frame times alone
-		// miss it. A fixed 300k-step loop takes ~1.5ms on a modern desktop and
-		// 2-3x that or more on slow hardware: best of five, over 3.5ms is slow.
-		let best = Infinity;
-		for (let run = 0; run < 5; run += 1) {
-			const t0 = performance.now();
-			let sink = 0;
-			for (let i = 0; i < 300000; i += 1) {
-				sink += Math.sqrt(i) * (i & 3);
-			}
-			best = Math.min(best, performance.now() - t0 + (sink < 0 ? 1 : 0));
-		}
-
-		if (best > 3.5) {
-			document.documentElement.classList.add("motion-lite");
-			settleMotionLite();
-			return;
-		}
-
+		// Idle frames only catch a machine that struggles even at rest; slowness
+		// that shows up while scrolling is caught by watchScrollFrames below.
 		const intervals = [];
 		const start = performance.now();
 		let last = 0;
@@ -846,7 +829,64 @@ function sampleFrameRate() {
 	}
 }
 
-const easeInOut = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+// Measures the visitor's own scrolling once: frames are counted only while a
+// scroll happened in the last 150ms. If at least a quarter of 40+ such frames
+// take over 25ms, the page cannot keep up here and switches to the calm
+// version for the rest of the visit. A fast machine never trips it.
+function watchScrollFrames() {
+	if (!motionEnabled() || isLite() || !("requestAnimationFrame" in window)) {
+		return;
+	}
+
+	let lastScroll = 0;
+	let last = 0;
+	let frames = 0;
+	let slow = 0;
+	let running = false;
+
+	const stop = () => {
+		window.removeEventListener("scroll", onScroll);
+	};
+
+	const tick = (now) => {
+		if (now - lastScroll > 150 || document.hidden) {
+			running = false;
+			last = 0;
+			return;
+		}
+
+		if (last) {
+			frames += 1;
+			if (now - last > 25) {
+				slow += 1;
+			}
+		}
+		last = now;
+
+		if (frames >= 40) {
+			if (slow / frames >= 0.25) {
+				document.documentElement.classList.add("motion-lite");
+			}
+			stop();
+			running = false;
+			return;
+		}
+
+		window.requestAnimationFrame(tick);
+	};
+
+	const onScroll = () => {
+		lastScroll = performance.now();
+		if (!running) {
+			running = true;
+			window.requestAnimationFrame(tick);
+		}
+	};
+
+	window.addEventListener("scroll", onScroll, { passive: true });
+}
+
+const easeInOut =(t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 
 // Sweeps the range from its current value to 65, then 35, then back (1.4s).
 // `apply` is the slider's own update path, so the picture and the input value
@@ -1339,6 +1379,7 @@ function turnHeroHead() {
 }
 turnHeroHead();
 sampleFrameRate();
+watchScrollFrames();
 
 const comparison = document.querySelector("[data-comparison]");
 const comparisonRange = document.querySelector("[data-comparison-range]");
