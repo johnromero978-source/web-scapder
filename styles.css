@@ -1707,12 +1707,13 @@ html.motion .section-indicator span.is-swapping {
 }
 
 /* ── Hero robot head turn (system.md > Motion: the one pointer-following exception) ──
-   script.js inserts this canvas right after .hero-robot (a sibling, so repainting
+   script.js inserts this video right after .hero-robot (a sibling, so scrubbing
    it never re-runs the photo's CSS filter) only for html.motion + a fine pointer,
-   once every frame is decoded. The gaze frames have the photo's grayscale and
-   contrast baked in, so the canvas needs no filter. It covers the same box with
-   the same opacity and object-position, and fades in over the photo; the photo is then dropped
-   (.is-replaced), so the tone stays exactly the photo's. */
+   once it can play through. It is never played, only seeked frame by frame. The
+   video has the photo's grayscale and contrast baked in, so it needs no filter.
+   It covers the same box with the same opacity and object-position, and fades
+   in over the photo; the photo is then dropped (.is-replaced), so the tone stays
+   exactly the photo's. */
 
 .hero-gaze {
 	position: absolute;
