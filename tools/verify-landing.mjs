@@ -608,7 +608,7 @@ const checks = [
         has(".capability-list", /transition:\s*none/) &&
         has(".capability-list", /transform:\s*none/) &&
         has(".section-indicator", /transition:\s*none/) &&
-        has(".case-metrics", /opacity:\s*1/) &&
+        has(".case-metrics::before", /display:\s*none/) &&
         has(".hero-robot", /animation:\s*none/)
       );
     })(),
@@ -728,6 +728,164 @@ const checks = [
         !ppe.test(indexHtml.slice(indexHtml.indexOf('id="edgesight"'), indexHtml.indexOf('id="capability"')))
       );
     })(),
+  },
+  // ── M5 effects pass: "Your Data has a Voice" — the page decodes its data. ──
+  {
+    name: "M5 system.md Motion names the four new effects as narrow exceptions, skipped under motion-lite",
+    pass: (() => {
+      const system = read("system.md");
+      const start = system.indexOf("### Motion");
+      const motion = system.slice(start, system.indexOf("\n## ", start)).toLowerCase();
+      return (
+        motion.includes("decod") &&
+        motion.includes("signal line") &&
+        motion.includes("metric scan") &&
+        motion.includes("reticle") &&
+        /motion-lite[^\n]*(decod|signal line|reticle)/.test(motion)
+      );
+    })(),
+  },
+  {
+    // The scramble is a separate aria-hidden layer; the heading's own text is
+    // never replaced, so screen readers and search always read the real words.
+    name: "M5 decoding headings: aria-hidden cloned layer, real text never rewritten, h2 + tagline only (not the H1)",
+    pass: (() => {
+      const start = scriptJs.indexOf("function decodeHeadings");
+      const body = start < 0 ? "" : scriptJs.slice(start, start + scriptJs.slice(start).search(/\r?\n\}\r?\n/));
+      return (
+        body.includes('"aria-hidden", "true"') &&
+        body.includes("cloneNode(true)") &&
+        body.includes(".system-line") &&
+        body.includes("h2") &&
+        !/\bh1\b|hero-title/.test(body) &&
+        !/heading\.(textContent|innerHTML|innerText)\s*=/.test(body) &&
+        !/\.innerHTML\s*=/.test(body) &&
+        body.includes("DECODE_GLYPHS") &&
+        scriptJs.includes("decodeHeadings()")
+      );
+    })(),
+  },
+  {
+    name: "M5 decoding runs one capped rAF loop that stops when done, skips lite and releases on language change",
+    pass: (() => {
+      const start = scriptJs.indexOf("function decodeHeadings");
+      const body = start < 0 ? "" : scriptJs.slice(start, start + scriptJs.slice(start).search(/\r?\n\}\r?\n/));
+      return (
+        body.includes("motionEnabled()") &&
+        body.includes("isLite()") &&
+        body.includes("MAX_ACTIVE_DECODES") &&
+        body.includes("requestAnimationFrame") &&
+        body.includes("IntersectionObserver") &&
+        body.includes('"scapder:language"') &&
+        // glyphs that never add a line-break opportunity (no / \ - [ ] | +)
+        /const DECODE_GLYPHS = "[^"/\\\-\[\]|+ ]+"/.test(scriptJs)
+      );
+    })(),
+  },
+  {
+    // A signal travelling down the page: transform only, never top/height.
+    name: "M5 signal line: scroll-linked scaleY via one passive listener + rAF, gated, no top/height animation",
+    pass: (() => {
+      const start = scriptJs.indexOf("function drawSignalLine");
+      const body = start < 0 ? "" : scriptJs.slice(start, start + scriptJs.slice(start).search(/\r?\n\}\r?\n/));
+      const css = read("styles.css").replace(/\/\*[\s\S]*?\*\//g, "");
+      const rules = [...css.matchAll(/([^{}]*\.signal-[^{}]*)\{([^{}]*)\}/g)];
+      return (
+        body.includes("scaleY(") &&
+        body.includes('"scroll"') &&
+        body.includes("passive: true") &&
+        body.includes("requestAnimationFrame") &&
+        body.includes("motionEnabled()") &&
+        body.includes("isLite()") &&
+        body.includes('"aria-hidden", "true"') &&
+        scriptJs.includes("drawSignalLine()") &&
+        rules.length > 0 &&
+        rules.some(([, , b]) => /transform-origin:\s*(50% 0|top|center top)/.test(b)) &&
+        rules.every(([, , b]) => !/transition:[^;]*\b(top|height)\b/.test(b) && !/animation:/.test(b))
+      );
+    })(),
+  },
+  {
+    // The scan replaces the M1 fade: one effect, transform-based mask, real numbers.
+    name: "M5 metric scan: transform-masked sweep replaces the M1 fade, text never rewritten",
+    pass: (() => {
+      const css = read("styles.css").replace(/\/\*[\s\S]*?\*\//g, "");
+      const scan = (css.match(/@keyframes metric-scan\s*\{[\s\S]*?\}\s*\}/) || [""])[0];
+      const start = scriptJs.indexOf("function revealCaseMetrics");
+      const body = scriptJs.slice(start, start + scriptJs.slice(start).search(/\r?\n\}\r?\n/));
+      return (
+        /translateX\(|clip-path/.test(scan) &&
+        /\.metrics-in \.case-metrics::before\s*\{[^}]*animation:\s*metric-scan/.test(css) &&
+        !css.includes("metric-enter") &&
+        !/\.case-metrics li\s*\{[^}]*opacity:\s*0/.test(css) &&
+        !body.includes("textContent")
+      );
+    })(),
+  },
+  {
+    name: "M5 Edge Sight reticle: fine pointer + motion + not lite, pointer-events none, cursor restored over controls",
+    pass: (() => {
+      const start = scriptJs.indexOf("function aimEdgeReticle");
+      const body = start < 0 ? "" : scriptJs.slice(start, start + scriptJs.slice(start).search(/\r?\n\}\r?\n/));
+      const css = read("styles.css").replace(/\/\*[\s\S]*?\*\//g, "");
+      const reticle = (css.match(/\.edge-reticle\s*\{[^}]*\}/) || [""])[0];
+      return (
+        body.includes("(hover: hover) and (pointer: fine)") &&
+        body.includes("motionEnabled()") &&
+        body.includes("isLite()") &&
+        body.includes("pointermove") &&
+        body.includes("pointerleave") &&
+        body.includes("requestAnimationFrame") &&
+        body.includes('"aria-hidden", "true"') &&
+        scriptJs.includes("aimEdgeReticle(") &&
+        /pointer-events:\s*none/.test(reticle) &&
+        /\.has-reticle\s*\{[^}]*cursor:\s*none/.test(css) &&
+        /\.has-reticle[^{]*(button|input|a)[^{]*\{[^}]*cursor:\s*(auto|pointer|default)/.test(css)
+      );
+    })(),
+  },
+  {
+    name: "M5 styles neutralise decode, signal line, metric scan and reticle under .motion-lite",
+    pass: (() => {
+      const css = read("styles.css").replace(/\/\*[\s\S]*?\*\//g, "");
+      const lite = [...css.matchAll(/([^{}]*\.motion-lite[^{}]*)\{([^{}]*)\}/g)];
+      const has = (needle, prop) => lite.some(([, selector, body]) => selector.includes(needle) && prop.test(body));
+      return (
+        has(".decode-layer", /display:\s*none/) &&
+        has(".signal-line", /display:\s*none/) &&
+        has(".case-metrics::before", /display:\s*none/) &&
+        has(".edge-reticle", /display:\s*none/) &&
+        // the transparent-text state only exists outside lite
+        /html\.motion:not\(\.motion-lite\)\s+\.is-decoding\s*\{[^}]*-webkit-text-fill-color:\s*transparent/.test(css)
+      );
+    })(),
+  },
+  {
+    // Hover/focus feedback: an ink fill and a drawn underline, transform only, no lift.
+    name: "M5 micro-interactions: primary button data fill and nav underline draw from the left (scaleX), focus-visible too",
+    pass: (() => {
+      const css = read("styles.css").replace(/\/\*[\s\S]*?\*\//g, "");
+      const fill = (css.match(/\.btn-primary::before\s*\{[^}]*\}/) || [""])[0];
+      const line = (css.match(/\.nav a::after\s*\{[^}]*\}/) || [""])[0];
+      return (
+        /transform:\s*scaleX\(0\)/.test(fill) &&
+        /transform-origin:\s*(left|0)/.test(fill) &&
+        /transition:\s*transform\s+(1[5-9]\d|2[0-5]\d)ms/.test(fill) &&
+        /transform:\s*scaleX\(0\)/.test(line) &&
+        /transform-origin:\s*(left|0)/.test(line) &&
+        /\.btn-primary:focus-visible::before/.test(css) &&
+        /\.nav a:focus-visible::after/.test(css) &&
+        /\.nav a\[aria-current="true"\]::after/.test(css) &&
+        !/\.btn-primary:hover\s*\{[^}]*background/.test(css)
+      );
+    })(),
+  },
+  {
+    name: "M5 still no ticking counters (no setInterval, no number formatting, metric text never written)",
+    pass:
+      !scriptJs.includes("setInterval") &&
+      !scriptJs.includes("toLocaleString") &&
+      !/case-metrics[\s\S]{0,200}?\.textContent\s*=/.test(scriptJs),
   },
   {
     name: "generic scroll reveal stays removed (no data-reveal)",

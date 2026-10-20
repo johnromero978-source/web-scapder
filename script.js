@@ -1000,9 +1000,11 @@ function demonstrateComparison(range, apply) {
 	observer.observe(range.closest("[data-comparison]") || range.closest(".comparison-card") || range);
 }
 
-// Case metrics fade in (with a small stagger, via CSS) the first time their card
-// is read. The numbers are never rewritten: the text in the DOM is always the
-// final text, so there is no counting and nothing to mis-announce.
+// Case metrics are uncovered by a one-time scan line (CSS: a paper cover with an
+// ink leading edge slides off, transform only) the first time their card is
+// read. The numbers are never rewritten: the text in the DOM is always the
+// final text, so there is no counting and nothing to mis-announce. Once the
+// sweep ends the cover is removed (metrics-done), so nothing stays composited.
 function revealCaseMetrics() {
 	if (!motionEnabled() || isLite()) {
 		return;
@@ -1015,16 +1017,23 @@ function revealCaseMetrics() {
 				if (!entry.isIntersecting) {
 					return;
 				}
-				entry.target.classList.add("metrics-in");
+				// The list is observed, the card carries the state.
+				entry.target.closest(".case-card")?.classList.add("metrics-in");
 				observer.unobserve(entry.target);
 			});
 		},
-		{ threshold: 0.3 },
+		// The whole metric row must be on screen, so the sweep is actually seen.
+		{ threshold: 0.9 },
 	);
 
 	cards.forEach((card) => {
 		card.classList.add("metrics-armed");
-		observer.observe(card);
+		card.addEventListener("animationend", (event) => {
+			if (event.animationName === "metric-scan") {
+				card.classList.add("metrics-done");
+			}
+		});
+		observer.observe(card.querySelector(".case-metrics") || card);
 	});
 }
 
@@ -1102,6 +1111,324 @@ function drawCapabilityLine() {
 }
 
 drawCapabilityLine();
+
+// ── Data-signal effects (system.md > Motion, data-signal exceptions) ──
+// "Your Data has a Voice": headings decode once, a signal line follows the
+// reader down the page, case metrics are scanned in, and the Edge Sight video
+// gets a camera reticle. All of it is skipped under reduced motion, without JS
+// and in the calm version (motion-lite), where the final state simply shows.
+
+// Only plain alphabetic/numeric glyphs: swapping a letter for one of these never
+// adds a line-break opportunity, so the scrambled layer wraps exactly like the
+// real heading (Geist Mono gives every glyph the same advance).
+const DECODE_GLYPHS = "01#<>_=*";
+
+// Section H2s and the hero tagline (never the H1) resolve once, the first time
+// they are read: letters and digits cycle through DECODE_GLYPHS and lock in left
+// to right, the last one at 640ms. The heading itself is never rewritten. An
+// aria-hidden clone sits on top of it and only the clone's text nodes change;
+// the real text is painted transparent underneath (CSS, outside motion-lite), so
+// the box, the accessible name and the search text are exact from frame one.
+// One rAF loop drives every decode, at most three at a time, and stops when
+// nothing is left to resolve.
+function decodeHeadings() {
+	if (!motionEnabled() || isLite() || !("requestAnimationFrame" in window)) {
+		return;
+	}
+
+	const MAX_ACTIVE_DECODES = 3;
+	const DURATION = 640; // the last character locks here
+	const LEAD = 120; // every character scrambles at least this long
+	const GLYPH_STEP = 50; // glyphs change ~20 times a second, not every frame
+	const scrambleable = /[\p{L}\p{N}]/u;
+	const targets = document.querySelectorAll(".hero .system-line, main section h2");
+	const decoders = new Map();
+	const queue = [];
+	const active = new Set();
+	let frame = 0;
+
+	const glyph = () => DECODE_GLYPHS[Math.floor(Math.random() * DECODE_GLYPHS.length)];
+
+	const render = (decoder, elapsed) => {
+		const step = Math.floor(elapsed / GLYPH_STEP);
+		const reshuffle = step !== decoder.step;
+		decoder.step = step;
+
+		decoder.parts.forEach((part) => {
+			let changed = false;
+			part.slots.forEach((slot, index) => {
+				if (slot < 0) {
+					return;
+				}
+				const locked = elapsed >= decoder.lockAt(slot);
+				const next = locked ? part.chars[index] : reshuffle ? glyph() : part.shown[index];
+				if (next !== part.shown[index]) {
+					part.shown[index] = next;
+					changed = true;
+				}
+			});
+			if (changed) {
+				part.node.data = part.shown.join("");
+			}
+		});
+	};
+
+	const release = (decoder) => {
+		active.delete(decoder);
+		decoders.delete(decoder.heading);
+		decoder.layer.remove();
+		decoder.heading.classList.remove("is-decoding");
+	};
+
+	const releaseAll = () => {
+		cancelAnimationFrame(frame);
+		frame = 0;
+		queue.length = 0;
+		observer.disconnect();
+		[...decoders.values()].forEach(release);
+	};
+
+	const tick = (now) => {
+		frame = 0;
+
+		if (isLite()) {
+			// The calm version took over mid-visit: show every heading as it is.
+			releaseAll();
+			return;
+		}
+
+		active.forEach((decoder) => {
+			decoder.start = decoder.start || now;
+			const elapsed = now - decoder.start;
+			render(decoder, elapsed);
+			if (elapsed >= DURATION) {
+				release(decoder);
+			}
+		});
+
+		while (active.size < MAX_ACTIVE_DECODES && queue.length > 0) {
+			active.add(queue.shift());
+		}
+
+		if (active.size > 0) {
+			frame = requestAnimationFrame(tick);
+		}
+	};
+
+	const arm = (heading) => {
+		const style = window.getComputedStyle(heading);
+		const layer = document.createElement("span");
+		layer.className = "decode-layer";
+		layer.setAttribute("aria-hidden", "true");
+		heading.childNodes.forEach((node) => layer.append(node.cloneNode(true)));
+		// The clone paints exactly what the heading would: same colour, same shadow.
+		layer.style.color = style.color;
+		layer.style.textShadow = style.textShadow;
+
+		const parts = [];
+		let total = 0;
+		const walker = document.createTreeWalker(layer, NodeFilter.SHOW_TEXT);
+		while (walker.nextNode()) {
+			const chars = [...walker.currentNode.data];
+			const slots = chars.map((char) => (scrambleable.test(char) ? total++ : -1));
+			if (total > 0 && slots.some((slot) => slot >= 0)) {
+				parts.push({ node: walker.currentNode, chars, slots, shown: chars.slice() });
+			}
+		}
+
+		if (total === 0) {
+			return;
+		}
+
+		const span = DURATION - LEAD;
+		const decoder = {
+			heading,
+			layer,
+			parts,
+			start: 0,
+			step: -1,
+			lockAt: (slot) => LEAD + (span * slot) / Math.max(1, total - 1),
+		};
+
+		render(decoder, 0); // starts as glyphs: encoded until it is read
+		heading.append(layer);
+		heading.classList.add("is-decoding");
+		decoders.set(heading, decoder);
+		observer.observe(heading);
+	};
+
+	const observer = new IntersectionObserver(
+		(entries) => {
+			entries.forEach((entry) => {
+				if (!entry.isIntersecting) {
+					return;
+				}
+				observer.unobserve(entry.target);
+				const decoder = decoders.get(entry.target);
+				if (!decoder) {
+					return;
+				}
+				if (active.size < MAX_ACTIVE_DECODES) {
+					active.add(decoder);
+				} else {
+					queue.push(decoder);
+				}
+				if (!frame) {
+					frame = requestAnimationFrame(tick);
+				}
+			});
+		},
+		{ threshold: 0.5, rootMargin: "0px 0px -8% 0px" },
+	);
+
+	targets.forEach(arm);
+
+	// A language switch rewrites the headings (and drops the clones with them):
+	// everything is shown final from then on.
+	document.addEventListener("scapder:language", releaseAll);
+}
+
+decodeHeadings();
+
+// A 1px signal line in the left gutter runs from section 01 to section 07 and
+// fills with scroll position, its tip on the reading line (55% of the viewport).
+// It is cut into one segment per section so it takes that section's colour (ink
+// on light, paper on dark). Where it meets a section number, a short tap turns
+// ink as the tip passes and so does the number. Scroll-linked, transform only:
+// one passive scroll listener schedules one rAF, which writes scaleY and toggles
+// classes only when a value changed. Geometry is re-measured on resize.
+function drawSignalLine() {
+	if (!motionEnabled() || isLite() || !("requestAnimationFrame" in window)) {
+		return;
+	}
+
+	const labels = [...document.querySelectorAll("main section .section-index")];
+
+	if (labels.length < 2 || !("ResizeObserver" in window)) {
+		return;
+	}
+
+	const READ_LINE = 0.55;
+	const wide = window.matchMedia("(min-width: 1024px)");
+	const line = document.createElement("div");
+	line.className = "signal-line";
+	line.setAttribute("aria-hidden", "true");
+	document.body.append(line);
+
+	let segments = [];
+	let taps = [];
+	let frame = 0;
+	let viewport = window.innerHeight;
+
+	const isDark = (color) => {
+		const [r = 255, g = 255, b = 255, a = 1] = (color.match(/[\d.]+/g) || []).map(Number);
+		return a > 0.5 && 0.2126 * r + 0.7152 * g + 0.0722 * b < 128;
+	};
+
+	const update = () => {
+		frame = 0;
+
+		if (isLite()) {
+			window.removeEventListener("scroll", onScroll);
+			return;
+		}
+
+		const tip = window.scrollY + viewport * READ_LINE;
+
+		segments.forEach((segment) => {
+			const value = Math.min(1, Math.max(0, (tip - segment.top) / segment.height));
+			if (value === segment.value) {
+				return;
+			}
+			segment.value = value;
+			segment.fill.style.transform = `scaleY(${value.toFixed(4)})`;
+		});
+
+		taps.forEach((tap) => {
+			const reached = tip >= tap.y;
+			if (reached === tap.reached) {
+				return;
+			}
+			tap.reached = reached;
+			tap.el.classList.toggle("is-reached", reached);
+			tap.label.classList.toggle("is-reached", reached);
+		});
+	};
+
+	const build = () => {
+		line.replaceChildren();
+		labels.forEach((label) => label.classList.remove("is-reached"));
+		segments = [];
+		taps = [];
+		viewport = window.innerHeight;
+
+		if (!wide.matches) {
+			return;
+		}
+
+		const scrollY = window.scrollY;
+		const centre = (rect) => rect.top + rect.height / 2 + scrollY;
+		const first = labels[0].getBoundingClientRect();
+		const start = centre(first);
+		const end = centre(labels[labels.length - 1].getBoundingClientRect());
+		// Halfway between the viewport edge and the container edge (24px gutter).
+		line.style.left = `${Math.max(8, Math.round(first.left) - 12)}px`;
+
+		document.querySelectorAll("main > section").forEach((section) => {
+			const rect = section.getBoundingClientRect();
+			const top = Math.max(start, rect.top + scrollY);
+			const bottom = Math.min(end, rect.bottom + scrollY);
+			if (bottom - top < 1) {
+				return;
+			}
+			const dark = isDark(window.getComputedStyle(section).backgroundColor);
+			const el = document.createElement("span");
+			const fill = document.createElement("span");
+			el.className = dark ? "signal-seg is-dark" : "signal-seg";
+			fill.className = "signal-fill";
+			el.style.top = `${top}px`;
+			el.style.height = `${bottom - top}px`;
+			el.append(fill);
+			line.append(el);
+			segments.push({ fill, top, height: bottom - top, value: -1 });
+		});
+
+		labels.forEach((label) => {
+			const y = Math.round(centre(label.getBoundingClientRect()));
+			const el = document.createElement("span");
+			el.className = label.closest(".section-inverse") ? "signal-tap is-dark" : "signal-tap";
+			el.style.top = `${y}px`;
+			line.append(el);
+			taps.push({ el, label, y, reached: false });
+		});
+
+		update();
+	};
+
+	const onScroll = () => {
+		if (!frame) {
+			frame = requestAnimationFrame(update);
+		}
+	};
+
+	let pending = 0;
+	const rebuild = () => {
+		if (!pending) {
+			pending = requestAnimationFrame(() => {
+				pending = 0;
+				build();
+			});
+		}
+	};
+
+	// Body size changes cover resizes, late images and fonts, and language swaps.
+	new ResizeObserver(rebuild).observe(document.body);
+	wide.addEventListener("change", rebuild);
+	window.addEventListener("resize", rebuild, { passive: true });
+	window.addEventListener("scroll", onScroll, { passive: true });
+}
+
+drawSignalLine();
 
 // Navigation state, not decoration: it also runs under reduced motion (the
 // number just changes instantly). The section whose body crosses a thin band
@@ -1743,10 +2070,139 @@ function initEdgeSightDemo(stage) {
 }
 // end Edge Sight demo
 
+// Over the Edge Sight video, a fine pointer becomes a camera reticle: corner
+// brackets, a centre tick and a normalised x/y readout of the point it rests on.
+// It eases toward the pointer (frame-rate-independent, ~55ms time constant),
+// stops its rAF when it has arrived, never takes pointer events, and only hides
+// the native cursor on the video itself. Touch, reduced motion, no JS and the
+// calm version keep the plain video and cursor.
+function aimEdgeReticle(stage) {
+	if (
+		!motionEnabled() ||
+		isLite() ||
+		!window.matchMedia("(hover: hover) and (pointer: fine)").matches ||
+		!("requestAnimationFrame" in window)
+	) {
+		return;
+	}
+
+	const marks =
+		"M0.5 12.5V0.5H12.5M51.5 0.5H63.5V12.5M63.5 51.5V63.5H51.5M12.5 63.5H0.5V51.5" +
+		"M32.5 24.5V29.5M32.5 35.5V40.5M24.5 32.5H29.5M35.5 32.5H40.5";
+	const reticle = document.createElement("div");
+	reticle.className = "edge-reticle";
+	reticle.setAttribute("aria-hidden", "true");
+	const svgNs = "http://www.w3.org/2000/svg";
+	const svg = document.createElementNS(svgNs, "svg");
+	svg.setAttribute("viewBox", "0 0 64 64");
+	svg.setAttribute("width", "64");
+	svg.setAttribute("height", "64");
+	svg.setAttribute("focusable", "false");
+	["edge-reticle-halo", "edge-reticle-mark"].forEach((name) => {
+		const path = document.createElementNS(svgNs, "path");
+		path.setAttribute("class", name);
+		path.setAttribute("d", marks);
+		svg.append(path);
+	});
+	const readout = document.createElement("span");
+	readout.className = "edge-reticle-readout";
+	reticle.append(svg, readout);
+	stage.append(reticle);
+
+	const target = { x: 0, y: 0 };
+	const pos = { x: 0, y: 0 };
+	let size = { width: 1, height: 1 };
+	let frame = 0;
+	let last = 0;
+	let shown = "";
+
+	const clamp01 = (value) => Math.min(1, Math.max(0, value));
+
+	const render = () => {
+		reticle.style.transform = `translate3d(${pos.x.toFixed(1)}px, ${pos.y.toFixed(1)}px, 0)`;
+		const nx = clamp01(pos.x / size.width);
+		const ny = clamp01(pos.y / size.height);
+		const text = `x ${nx.toFixed(2)} · y ${ny.toFixed(2)}`;
+		if (text !== shown) {
+			shown = text;
+			readout.textContent = text;
+			reticle.classList.toggle("is-flip-x", nx > 0.8);
+			reticle.classList.toggle("is-flip-y", ny > 0.82);
+		}
+	};
+
+	const step = (now) => {
+		const dt = last ? Math.min(64, now - last) : 16;
+		last = now;
+		const k = 1 - Math.exp(-dt / 55);
+		pos.x += (target.x - pos.x) * k;
+		pos.y += (target.y - pos.y) * k;
+
+		if (Math.abs(target.x - pos.x) < 0.3 && Math.abs(target.y - pos.y) < 0.3) {
+			pos.x = target.x;
+			pos.y = target.y;
+			render();
+			frame = 0;
+			last = 0;
+			return;
+		}
+
+		render();
+		frame = requestAnimationFrame(step);
+	};
+
+	const show = (on) => {
+		reticle.classList.toggle("is-on", on);
+		stage.classList.toggle("has-reticle", on);
+	};
+
+	const hide = () => {
+		show(false);
+		cancelAnimationFrame(frame);
+		frame = 0;
+		last = 0;
+	};
+
+	const aim = (event, jump) => {
+		if ((event.pointerType !== "mouse" && event.pointerType !== "pen") || isLite()) {
+			hide();
+			return;
+		}
+		if (event.target instanceof Element && event.target.closest("button, input, a")) {
+			hide();
+			return;
+		}
+		const rect = stage.getBoundingClientRect();
+		size = { width: rect.width || 1, height: rect.height || 1 };
+		target.x = event.clientX - rect.left;
+		target.y = event.clientY - rect.top;
+		if (jump || !reticle.classList.contains("is-on")) {
+			pos.x = target.x;
+			pos.y = target.y;
+			render();
+			show(true);
+			return;
+		}
+		if (!frame) {
+			frame = requestAnimationFrame(step);
+		}
+	};
+
+	stage.addEventListener("pointerenter", (event) => aim(event, true));
+	stage.addEventListener("pointermove", (event) => aim(event, false), { passive: true });
+	stage.addEventListener("pointerleave", hide);
+	stage.addEventListener("pointerdown", (event) => {
+		if (event.pointerType !== "mouse" && event.pointerType !== "pen") {
+			hide();
+		}
+	});
+}
+
 const edgeStage = document.querySelector("[data-edge-stage]");
 
 if (edgeStage && "IntersectionObserver" in window) {
 	initEdgeSightDemo(edgeStage);
+	aimEdgeReticle(edgeStage);
 }
 
 const contactForm = document.querySelector("[data-contact-form]");
