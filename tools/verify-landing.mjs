@@ -415,17 +415,28 @@ const checks = [
       statSync(resolve(root, "img/hero/robot-gaze-00.webp")).size < 250 * 1024,
   },
   {
-    name: "R3 gaze frames: at least 30 baked-gray files in img/hero/gaze, under 1.5 MB total, no stale robot-gaze-01+",
+    name: "R4 gaze video: img/hero/gaze.mp4 is all-intra H.264 with faststart, under 1.5 MB; frame files and robot-gaze-01+ are gone",
     pass: (() => {
-      const dir = resolve(root, "img/hero/gaze");
-      const frames = existsSync(dir) ? readdirSync(dir).filter((name) => /^\d\d\.webp$/.test(name)) : [];
-      const total = frames.reduce((sum, name) => sum + statSync(resolve(dir, name)).size, 0);
+      const file = resolve(root, "img/hero/gaze.mp4");
+      if (!existsSync(file)) {
+        return false;
+      }
+      const video = readFileSync(file);
+      const text = video.toString("latin1");
       const stale = readdirSync(resolve(root, "img/hero")).filter((name) => /^robot-gaze-(?!00)\d\d\.webp$/.test(name));
-      return frames.length >= 30 && total < 1.5 * 1024 * 1024 && stale.length === 0;
+      return (
+        video.length < 1.5 * 1024 * 1024 &&
+        text.includes("avc1") &&
+        / keyint=1 /.test(text) &&
+        text.indexOf("moov") > -1 &&
+        text.indexOf("moov") < text.indexOf("mdat") &&
+        !existsSync(resolve(root, "img/hero/gaze")) &&
+        stale.length === 0
+      );
     })(),
   },
   {
-    name: "R3 gaze canvas is a sibling layer after .hero-robot (not inside it), no CSS filter on .hero-gaze",
+    name: "R4 gaze video is a muted, inline sibling layer after .hero-robot, no CSS filter on .hero-gaze, same opacity and position as the photo",
     pass: (() => {
       const start = scriptJs.indexOf("function turnHeroHead");
       const end = start + scriptJs.slice(start).search(/\r?\n\}\r?\n/);
@@ -433,31 +444,37 @@ const checks = [
       const css = read("styles.css").replace(/\/\*[\s\S]*?\*\//g, "");
       const rule = (css.match(/\.hero-gaze\s*\{[^}]*\}/) || [""])[0];
       return (
-        !/robot\.append\(\s*canvas/.test(body) &&
-        /robot\.after\(\s*canvas/.test(body) &&
+        /createElement\("video"\)/.test(body) &&
+        /\.muted = true/.test(body) &&
+        /\.playsInline = true/.test(body) &&
+        /robot\.after\(\s*video/.test(body) &&
+        !/robot\.append\(/.test(body) &&
         rule.length > 0 &&
         !/filter\s*:/.test(rule) &&
-        /opacity:\s*0\.82/.test(rule)
+        /opacity:\s*0\.82/.test(rule) &&
+        /object-fit:\s*cover/.test(rule) &&
+        /object-position:\s*42% center/.test(rule)
       );
     })(),
   },
   {
-    name: "R3 renderer: globalAlpha crossfade, ResizeObserver geometry cache, no getComputedStyle, frame-rate-independent easing",
+    name: "R4 renderer: seeks currentTime by nearest frame, one seek in flight, short frame-rate-independent ease, no canvas",
     pass: (() => {
       const start = scriptJs.indexOf("function turnHeroHead");
       const end = start + scriptJs.slice(start).search(/\r?\n\}\r?\n/);
       const body = scriptJs.slice(start, end);
       return (
-        body.includes("globalAlpha") &&
+        body.includes("currentTime") &&
+        body.includes('"seeked"') &&
+        body.includes("Math.round(") &&
+        body.includes("Math.exp(") &&
         body.includes("ResizeObserver") &&
-        !body.includes("getComputedStyle") &&
-        body.includes("Math.pow(") &&
-        !/const EASE = 0\.12/.test(body)
+        !/canvas|drawImage|globalAlpha|createImageBitmap|getComputedStyle/.test(body)
       );
     })(),
   },
   {
-    name: "R2 head turn: gated by motion + fine pointer, loads after load, canvas aria-hidden, IntersectionObserver, rAF eased",
+    name: "R2 head turn: gated by motion + fine pointer, loads after load, video aria-hidden, IntersectionObserver, rAF eased",
     pass: (() => {
       const start = scriptJs.indexOf("function turnHeroHead");
       const end = start + scriptJs.slice(start).search(/\r?\n\}\r?\n/);
@@ -468,8 +485,8 @@ const checks = [
         body.includes("motionEnabled()") &&
         body.includes("(hover: hover) and (pointer: fine)") &&
         body.includes('"load"') &&
-        body.includes("img/hero/gaze/") &&
-        body.includes("decode") &&
+        body.includes("img/hero/gaze.mp4") &&
+        body.includes('"canplaythrough"') &&
         body.includes('"aria-hidden", "true"') &&
         body.includes("pointermove") &&
         body.includes("pointerleave") &&

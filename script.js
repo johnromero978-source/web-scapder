@@ -1019,26 +1019,29 @@ function trackCurrentSection() {
 trackCurrentSection();
 
 // The hero robot turns its head toward the visitor. The photo is frame 0 of a
-// keyframe-locked clip (the robot looking toward the hero text); the gaze frames
-// are the same clip from the first movement to the moment the robot faces the
-// camera, with the photo's grayscale + contrast look already baked into their
-// pixels. On a desktop with a fine pointer (and no reduced-motion request) the
-// pointer's x position inside the hero picks a position along the clip: over the
-// text the robot looks at the text, toward the right it faces the visitor. The
-// shown position follows the pointer with frame-rate-independent easing and is
-// drawn as a crossfade between the two neighbouring frames, so the motion is
-// continuous. It eases back to frame 0 when the pointer leaves. This is the one
+// keyframe-locked clip (the robot looking toward the hero text); img/hero/gaze.mp4
+// is the same clip from the first movement to the moment the robot faces the
+// camera (37 frames at 24 fps), with the photo's grayscale + contrast look baked
+// into its pixels. On a desktop with a fine pointer (and no reduced-motion
+// request) the pointer's x position inside the hero picks a frame of that video:
+// over the text the robot looks at the text, toward the right it faces the
+// visitor. The position follows the pointer with a short frame-rate-independent
+// ease and eases back to frame 0 when the pointer leaves. This is the one
 // pointer-following exception in system.md.
 //
-// Frames are fetched only after `load` and decoded off the main thread; the
-// canvas replaces the background only once all of them are ready and the lens
-// focus entrance has finished, so there is no half-loaded state. The canvas is
-// a sibling layer right after `.hero-robot` (same box and opacity, no CSS
-// filter), so repainting it never re-runs a filtered layer. The canvas bitmap
-// has the frames' native size, so every draw is an unscaled 1:1 blit; CSS
-// (object-fit: cover + the photo's object-position) does the cover scaling in
-// the compositor. Only the hero's box is measured, on resize. Touch,
-// reduced-motion and no-JS visitors download no gaze frames.
+// The video is never played; it is scrubbed. Every frame is a keyframe
+// (all-intra H.264), so each seek decodes exactly one frame in the browser's
+// media pipeline (hardware decoded where available) and the result is
+// composited as a video layer: no main-thread drawing and no texture uploads
+// from script, which is what kept the earlier canvas renderers from holding
+// 60 fps on a 1900 px wide hero. Only one seek is in flight at a time; the
+// newest wanted frame is applied when the previous seek lands.
+//
+// The video is fetched only after `load` and shown only once it can play
+// through and the lens focus entrance has finished. It is a sibling layer right
+// after `.hero-robot` (same box, opacity and object-position, no CSS filter);
+// once it has faded in, the photo underneath is dropped. Touch, reduced-motion
+// and no-JS visitors download nothing beyond the photo.
 function turnHeroHead() {
 	const hero = document.querySelector(".hero");
 	const robot = document.querySelector(".hero-robot");
@@ -1052,83 +1055,63 @@ function turnHeroHead() {
 		return;
 	}
 
+	const video = document.createElement("video");
+
+	if (!video.canPlayType('video/mp4; codecs="avc1.640028"')) {
+		return;
+	}
+
 	const FRAME_COUNT = 37;
 	const LAST_FRAME = FRAME_COUNT - 1;
+	const FPS = 24;
 	const LEFT_EDGE = 0.35; // pointer x (share of hero width) at or below which the robot looks at the text.
 	const RIGHT_EDGE = 0.75; // pointer x at or beyond which the robot faces the visitor.
-	const FOLLOW = 0.25; // share of the remaining distance covered per 60 fps frame.
-	const SETTLE = 0.01; // frames; closer than this snaps to the target and stops.
+	const EASE_MS = 20; // easing time constant: ~95% of a jump is covered in 60 ms.
+	const SETTLE = 0.05; // frames; closer than this snaps to the target and stops.
 
-	const frameUrl = (index) => `img/hero/gaze/${String(index).padStart(2, "0")}.webp`;
+	video.className = "hero-gaze";
+	video.muted = true;
+	video.playsInline = true;
+	video.preload = "auto";
+	video.disablePictureInPicture = true;
+	video.setAttribute("muted", "");
+	video.setAttribute("playsinline", "");
+	video.setAttribute("aria-hidden", "true");
+	video.tabIndex = -1;
 
-	const decodeFrame = (index) => {
-		if (typeof createImageBitmap === "function") {
-			return fetch(frameUrl(index))
-				.then((response) => {
-					if (!response.ok) {
-						throw new Error(`gaze frame ${index}`);
-					}
-					return response.blob();
-				})
-				.then((blob) => createImageBitmap(blob));
-		}
+	let shown = 0; // frame index the video shows (or is seeking to).
+	let wanted = 0; // frame index the eased position asks for.
+	let seeking = false;
 
-		const image = new Image();
-		image.src = frameUrl(index);
-		return image.decode().then(() => image);
+	// Aim at the middle of the frame so rounding never lands on a neighbour.
+	const seek = () => {
+		seeking = true;
+		shown = wanted;
+		video.currentTime = (shown + 0.5) / FPS;
 	};
 
-	const load = () => {
-		const decoded = Array.from({ length: FRAME_COUNT }, (_, index) => decodeFrame(index));
-		const focusing = typeof robot.getAnimations === "function" ? robot.getAnimations() : [];
-		const focused = Promise.all(
-			focusing.map((animation) => animation.finished.catch(() => undefined)),
-		);
-
-		Promise.all([Promise.all(decoded), focused])
-			.then(([frames]) => activate(frames))
-			.catch(() => undefined);
+	const showFrame = (index) => {
+		wanted = index;
+		if (!seeking && wanted !== shown) {
+			seek();
+		}
 	};
 
-	const activate = (frames) => {
-		const canvas = document.createElement("canvas");
-		const context = canvas.getContext("2d", { alpha: false });
-
-		if (!context) {
-			return;
+	video.addEventListener("seeked", () => {
+		seeking = false;
+		if (wanted !== shown) {
+			seek();
 		}
+	});
 
-		canvas.className = "hero-gaze";
-		canvas.setAttribute("aria-hidden", "true");
-
-		canvas.width = frames[0].naturalWidth || frames[0].width;
-		canvas.height = frames[0].naturalHeight || frames[0].height;
-
+	const activate = () => {
 		let current = 0; // eased, fractional position along the frames.
 		let target = 0;
-		let drawn = -1;
 		let visible = true;
 		let frame = 0;
 		let last = 0;
 		let heroLeft = 0;
 		let heroWidth = 1;
-
-		// Crossfade between the two neighbouring frames for a continuous turn.
-		const draw = (position) => {
-			const base = Math.min(LAST_FRAME, Math.floor(position));
-			const mix = position - base;
-
-			context.globalAlpha = 1;
-			context.drawImage(frames[base], 0, 0);
-
-			if (mix > 0.004 && base < LAST_FRAME) {
-				context.globalAlpha = mix;
-				context.drawImage(frames[base + 1], 0, 0);
-				context.globalAlpha = 1;
-			}
-
-			drawn = position;
-		};
 
 		const measure = () => {
 			const rect = hero.getBoundingClientRect();
@@ -1146,15 +1129,13 @@ function turnHeroHead() {
 			frame = 0;
 			const dt = last ? Math.min(now - last, 64) : 16.67;
 			last = now;
-			current += (target - current) * (1 - Math.pow(1 - FOLLOW, dt / 16.67));
+			current += (target - current) * (1 - Math.exp(-dt / EASE_MS));
 
 			if (Math.abs(target - current) < SETTLE) {
 				current = target;
 			}
 
-			if (Math.abs(current - drawn) >= 0.01 || (current === target && current !== drawn)) {
-				draw(current);
-			}
+			showFrame(Math.round(current));
 
 			if (current !== target && visible) {
 				frame = window.requestAnimationFrame(tick);
@@ -1195,12 +1176,11 @@ function turnHeroHead() {
 				last = 0;
 				current = 0;
 				target = 0;
-				draw(0);
+				showFrame(0);
 			}
 		}).observe(hero);
 
 		measure();
-		draw(0);
 
 		if ("ResizeObserver" in window) {
 			new ResizeObserver(measure).observe(hero);
@@ -1208,15 +1188,37 @@ function turnHeroHead() {
 			window.addEventListener("resize", measure);
 		}
 
-		// The canvas fades in over the photo; once it is opaque the photo underneath is dropped.
-		canvas.addEventListener(
+		// The video fades in over the photo; once it is opaque the photo underneath is dropped.
+		video.addEventListener(
 			"animationend",
 			() => {
 				robot.classList.add("is-replaced");
 			},
 			{ once: true },
 		);
-		robot.after(canvas);
+		robot.after(video);
+	};
+
+	const load = () => {
+		const ready = new Promise((resolve, reject) => {
+			video.addEventListener("canplaythrough", resolve, { once: true });
+			video.addEventListener("error", reject, { once: true });
+		});
+		const focusing = typeof robot.getAnimations === "function" ? robot.getAnimations() : [];
+		const focused = Promise.all(
+			focusing.map((animation) => animation.finished.catch(() => undefined)),
+		);
+
+		video.src = "img/hero/gaze.mp4";
+		video.load();
+
+		// Start on frame 0 (the photo) before the video becomes visible.
+		Promise.all([ready, focused])
+			.then(() => {
+				video.currentTime = 0.5 / FPS;
+				activate();
+			})
+			.catch(() => undefined);
 	};
 
 	if (document.readyState === "complete") {
@@ -1225,7 +1227,6 @@ function turnHeroHead() {
 		window.addEventListener("load", load, { once: true });
 	}
 }
-
 turnHeroHead();
 
 const comparison = document.querySelector("[data-comparison]");
