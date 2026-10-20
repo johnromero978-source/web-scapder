@@ -27,7 +27,7 @@ jobs:
       - name: Prepare public artifact
         run: |
           mkdir public
-          cp index.html styles.css script.js .nojekyll public/
+          cp index.html styles.css script.js robots.txt sitemap.xml favicon.ico favicon-32.png apple-touch-icon.png .nojekyll public/
           cp -R img public/img
 
       - name: Setup Pages

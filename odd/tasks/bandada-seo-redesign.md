@@ -30,7 +30,7 @@
 
 ## Tasks
 - [x] T1 Bandada embed replaces Sentientum modal content (iframe facade, lang sync, teardown, remove YouTube/steps/facts code and unused i18n keys, update card copy, update verifier). Route: delegated writer (3+ non-trivial files).
-- [ ] T2 SEO: meta/canonical/hreflang strategy, OG/Twitter, JSON-LD Organization, favicon, robots.txt, sitemap.xml, `html lang` + title/description follow language, image weight (webp + width/height + lazy), `defer`, workflow copy list. Route: delegated writer.
+- [x] T2 SEO: meta/canonical/hreflang strategy, OG/Twitter, JSON-LD Organization, favicon, robots.txt, sitemap.xml, `html lang` + title/description follow language, image weight (webp + width/height + lazy), `defer`, workflow copy list. Route: delegated writer.
 - [ ] T3 Design review: critique against `system.md` (impeccable), agree fixes with user, apply. Route: TBD after critique.
 
 ## Acceptance
@@ -42,5 +42,14 @@
 - 2026-10-20: exploration done, branch created from `e30cabe`.
 - 2026-10-20: T1 done (delegated writer, strict TDD). RED: `node tools/verify-landing.mjs` failed 3 new checks (video plumbing gone, Bandada iframe contract, no hover lift). GREEN: verifier passes (14 checks); `node --check script.js` ok; Playwright (scratchpad check.mjs) ALL PASS at 1440x900 and 375x812: no iframe before open, src `?lang=es` on open, switch to en updates src and fullscreen href, Escape and close button remove the iframe, focus returns to card, focus never on iframe, scrollWidth <= 375 open and closed. Also removed the generic card `translateY(-2px)` hover. Commit: see `git log` (feat(portfolio): the Sentientum card opens the Bandada experience in-page).
 
+- 2026-10-20: T2 done (delegated writer, strict TDD). RED: verifier failed 8 new checks (canonical/robots/theme-color, OG+Twitter, JSON-LD, favicon, robots+sitemap in pages.yml, applyLanguage title/description, image weight, img width/height). GREEN: `node tools/verify-landing.mjs` passes (22 checks); `node --check script.js` ok; JSON-LD parses (Organization + WebSite); Playwright (scratchpad seo-check.mjs) ALL PASS: no 4xx requests, EN -> `html lang=en` + EN title/description, PT -> `pt-BR`, Bandada modal opens/closes, scrollWidth <= 375. Image bytes on initial load at 1440x900: 9628 KB -> 103 KB; after scrolling the whole page: 13553 KB -> 339 KB. Hero, team and slider screenshots match the previous look (mean abs pixel diff 0.40 / 0.65 / 3.41 of 255). Canonical host is https://scapder.com/ (www 301s to it). `og:locale` is `es_LA` (Facebook's Latin American Spanish code; no country stated in repo). No company `sameAs` profile exists in the repo, so JSON-LD omits it rather than inventing one. Favicon and OG art are derived from `img/logo/logosimbolo_scapder.png` flattened to monochrome. Originals are untouched; new files sit beside them (`*.webp`, `linkedin-icon-64.png`, `img/og-scapder.jpg`).
+
+## Follow-ups
+- Separate indexable URLs per language (`/en/`, `/pt/`) with `hreflang` alternates; today EN/PT are a JS swap on one URL, so only Spanish is indexable.
+- Add a company LinkedIn (or other) profile to JSON-LD `sameAs` once the user provides the URL.
+- Google Fonts stylesheet is still render-blocking (self-host Geist Mono if the user agrees to add the font files).
+- Delete or stop shipping the unreferenced multi-MB files under `img/` (the Pages job copies the whole folder).
+
 ## Next step
-T2.
+T3.
+
