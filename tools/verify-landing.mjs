@@ -27,6 +27,10 @@ const checks = [
       existsSync(resolve(root, "img/logo/scapder-wordmark-ink.png")),
   },
   {
+    name: "mobile menu button comes before the brand (visual and tab order)",
+    pass: /<div class="container header-inner">\s*<button\s+class="hamburger"[\s\S]*?<\/button>\s*<a class="brand"/.test(indexHtml),
+  },
+  {
     name: "contact form uses the API without private routing data",
     pass:
       indexHtml.includes('name="scapder-contact-endpoint"') &&
