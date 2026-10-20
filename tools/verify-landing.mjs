@@ -390,6 +390,40 @@ const checks = [
     })(),
   },
   {
+    name: "M3 system.md allows pointer-following only for the hero robot eyes and keeps the general ban",
+    pass: (() => {
+      const system = read("system.md");
+      const start = system.indexOf("### Motion");
+      const motion = system.slice(start, system.indexOf("\n## ", start));
+      return (
+        motion.includes("Pointer-following is banned except the hero robot's eyes (≤8px, eased, desktop fine pointer only, reduced-motion off).") &&
+        /Still banned:[^\n]*cursor-following/.test(motion)
+      );
+    })(),
+  },
+  {
+    name: "M3 hero eyes: gated by motion + fine pointer, aria-hidden, pointer-events none, paused off-screen",
+    pass: (() => {
+      const start = scriptJs.indexOf("function followHeroEyes");
+      const end = start + scriptJs.slice(start).search(/\r?\n\}\r?\n/);
+      const body = scriptJs.slice(start, end);
+      const css = read("styles.css").replace(/\/\*[\s\S]*?\*\//g, "");
+      return (
+        start > -1 &&
+        body.includes("motionEnabled()") &&
+        body.includes("(hover: hover) and (pointer: fine)") &&
+        body.includes('"aria-hidden", "true"') &&
+        body.includes("pointermove") &&
+        body.includes("pointerleave") &&
+        body.includes("requestAnimationFrame") &&
+        body.includes("cancelAnimationFrame") &&
+        body.includes("IntersectionObserver") &&
+        /\.hero-eyes\s*\{[^}]*pointer-events:\s*none/.test(css) &&
+        /html\.motion\s+\.hero-eye\b[^{]*\{[^}]*opacity:\s*0/.test(css)
+      );
+    })(),
+  },
+  {
     name: "generic scroll reveal stays removed (no data-reveal)",
     pass: !indexHtml.includes("data-reveal") && !scriptJs.includes("data-reveal") && !read("styles.css").includes("data-reveal"),
   },
