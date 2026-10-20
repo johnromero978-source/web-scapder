@@ -600,30 +600,57 @@
             </ol>
           </div>
           <div class="comparison-card">
-            <div class="comparison-stage" data-comparison style="--comparison: 50%;">
-              <img
+            <p id="edgesight-desc" class="visually-hidden" data-i18n="edgeDesc">
+              Cámara fija en una obra de construcción. El mismo video se muestra sin procesar y con cajas de detección sobre las personas y la maquinaria. El conteo de personas baja de 5 a 4 y luego a 3, y una excavadora entra en escena. Escena ilustrativa generada; la detección es real, hecha con un modelo de visión.
+            </p>
+            <div
+              class="comparison-stage"
+              data-comparison
+              data-edge-stage
+              style="--comparison: 50%;"
+              role="img"
+              aria-label="Cámara fija de una obra: video sin procesar y con detección"
+              data-i18n-aria-label="edgeStageLabel"
+              aria-describedby="edgesight-desc"
+            >
+              <video
                 class="comparison-base"
-                src="img/hero/imagen-filtro-calor.webp"
-                alt="Vista de cámara sin cajas ni texto, con mapa de calor"
-                data-i18n-alt="edgesightBaseImageAlt"
-                loading="lazy"
-                width="1400"
-                height="875"
-                decoding="async"
-              />
-              <img
-                class="comparison-overlay"
-                src="img/hero/imagen-camara-1.webp"
-                alt="Vista de cámara con detección de personas y elementos de seguridad"
-                data-i18n-alt="edgesightImageAlt"
-                loading="lazy"
-                width="1400"
-                height="875"
-                decoding="async"
-              />
+                src="img/edgesight/edgesight-site.mp4"
+                poster="img/edgesight/edgesight-poster.webp"
+                width="1600"
+                height="904"
+                muted
+                playsinline
+                loop
+                preload="none"
+                disablepictureinpicture
+              ></video>
+              <div class="comparison-overlay" aria-hidden="true">
+                <canvas data-edge-canvas></canvas>
+              </div>
               <div class="comparison-divider" aria-hidden="true">
                 <span></span>
               </div>
+            </div>
+            <div class="edge-readout">
+              <div class="edge-readout-head">
+                <p class="edge-count" aria-hidden="true">
+                  <span data-i18n="edgeCountLabel">Personas en escena</span>:
+                  <strong data-edge-count>5</strong>
+                </p>
+                <button
+                  class="btn btn-secondary edge-toggle"
+                  type="button"
+                  data-edge-toggle
+                  data-i18n="edgePlay"
+                  hidden
+                >
+                  Reproducir demo
+                </button>
+              </div>
+              <ol class="edge-log" aria-live="off" aria-hidden="true" data-edge-log>
+                <li><time>00:00.0</time> · 5 personas en escena</li>
+              </ol>
             </div>
             <div class="comparison-controls">
               <div class="comparison-captions" aria-hidden="true">
@@ -645,6 +672,9 @@
               </label>
               <p id="comparison-help" class="comparison-help" data-i18n="comparisonHelp">
                 La barra vertical revela la versión con detección.
+              </p>
+              <p class="edge-caption" data-i18n="edgeCaption">
+                Demostración ilustrativa: escena generada, detección real con un modelo de visión (YOLOv8) sobre el video.
               </p>
             </div>
           </div>

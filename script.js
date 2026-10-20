@@ -16,8 +16,6 @@ const translations = {
 		methodAria: "Método scapder",
 		flowAria: "Flujo Edge Sight AI",
 		footerAria: "Footer",
-		edgesightImageAlt:
-			"Vista de cámara con detección de personas y elementos de seguridad",
 		ctaTalk: "Hablemos",
 		ctaPortfolio: "Ver portafolio",
 		heroSystem: "Your Data has a Voice",
@@ -149,8 +147,19 @@ const translations = {
 		comparisonHelp:
 			"La barra vertical revela la versión con detección.",
 		comparisonAria: "Ajustar la comparación de Edge Sight AI",
-		edgesightBaseImageAlt:
-			"Vista de cámara sin cajas ni texto, con mapa de calor",
+		edgeStageLabel: "Cámara fija de una obra: video sin procesar y con detección",
+		edgeDesc:
+			"Cámara fija en una obra de construcción. El mismo video se muestra sin procesar y con cajas de detección sobre las personas y la maquinaria. El conteo de personas baja de 5 a 4 y luego a 3, y una excavadora entra en escena. Escena ilustrativa generada; la detección es real, hecha con un modelo de visión.",
+		edgeCaption:
+			"Demostración ilustrativa: escena generada, detección real con un modelo de visión (YOLOv8) sobre el video.",
+		edgeCountLabel: "Personas en escena",
+		edgePlay: "Reproducir demo",
+		edgePause: "Pausar demo",
+		edgeLogScene: "{n} personas en escena",
+		edgeLogPeople: "{n} personas",
+		edgeLogMachine: "maquinaria en movimiento",
+		edgeLabelPerson: "PERSONA",
+		edgeLabelMachine: "MAQUINARIA",
 		navTeam: "Equipo",
 		teamTitle: "Equipo",
 		teamLead: "El equipo que convierte datos complejos en inteligencia accionable.",
@@ -193,7 +202,6 @@ const translations = {
 		methodAria: "scapder method",
 		flowAria: "Edge Sight AI flow",
 		footerAria: "Footer",
-		edgesightImageAlt: "Camera view with people and safety element detection",
 		ctaTalk: "Talk to us",
 		ctaPortfolio: "View portfolio",
 		heroSystem: "Your Data has a Voice",
@@ -324,8 +332,19 @@ const translations = {
 		comparisonHelp:
 			"The vertical bar reveals the detection version.",
 		comparisonAria: "Adjust the Edge Sight AI comparison",
-		edgesightBaseImageAlt:
-			"Camera view without boxes or text, with a heat map",
+		edgeStageLabel: "Fixed construction-site camera: raw video and with detection",
+		edgeDesc:
+			"Fixed camera on a construction site. The same video is shown raw and with detection boxes on the people and the machinery. The people count goes from 5 to 4 and then 3, and an excavator drives into the scene. Illustrative generated scene; the detection is real, made by a vision model.",
+		edgeCaption:
+			"Illustrative demo: generated scene, real detection by a vision model (YOLOv8) on the video.",
+		edgeCountLabel: "People in scene",
+		edgePlay: "Play demo",
+		edgePause: "Pause demo",
+		edgeLogScene: "{n} people in scene",
+		edgeLogPeople: "{n} people",
+		edgeLogMachine: "machinery moving",
+		edgeLabelPerson: "PERSON",
+		edgeLabelMachine: "MACHINERY",
 		navTeam: "Team",
 		teamTitle: "Team",
 		teamLead: "The team that turns complex data into actionable intelligence.",
@@ -368,10 +387,6 @@ const translations = {
 		methodAria: "Método da scapder",
 		flowAria: "Fluxo do Edge Sight AI",
 		footerAria: "Rodapé",
-		edgesightImageAlt:
-			"Vista de câmera com detecção de pessoas e elementos de segurança",
-		edgesightBaseImageAlt:
-			"Vista de câmera sem caixas nem texto, com mapa de calor",
 		ctaTalk: "Vamos conversar",
 		ctaPortfolio: "Ver portfólio",
 		heroSystem: "Your Data has a Voice",
@@ -526,6 +541,19 @@ const translations = {
 		comparisonHelp:
 			"A barra vertical revela a versão com detecção.",
 		comparisonAria: "Ajustar a comparação do Edge Sight AI",
+		edgeStageLabel: "Câmera fixa de uma obra: vídeo sem processar e com detecção",
+		edgeDesc:
+			"Câmera fixa em uma obra de construção. O mesmo vídeo é mostrado sem processar e com caixas de detecção sobre as pessoas e o maquinário. A contagem de pessoas cai de 5 para 4 e depois para 3, e uma escavadeira entra em cena. Cena ilustrativa gerada; a detecção é real, feita por um modelo de visão.",
+		edgeCaption:
+			"Demonstração ilustrativa: cena gerada, detecção real com um modelo de visão (YOLOv8) sobre o vídeo.",
+		edgeCountLabel: "Pessoas em cena",
+		edgePlay: "Reproduzir demo",
+		edgePause: "Pausar demo",
+		edgeLogScene: "{n} pessoas em cena",
+		edgeLogPeople: "{n} pessoas",
+		edgeLogMachine: "maquinário em movimento",
+		edgeLabelPerson: "PESSOA",
+		edgeLabelMachine: "MAQUINÁRIO",
 		modalCloseLabel: "Fechar",
 		bandadaLede: "Do murmúrio à conclusão. Opinião sintética, não previsão.",
 		bandadaFullscreen: "Abrir em tela cheia",
@@ -578,6 +606,7 @@ function applyLanguage(lang) {
 	window.localStorage.setItem("scapder-language", lang);
 
 	syncBandada(lang);
+	document.dispatchEvent(new CustomEvent("scapder:language", { detail: lang }));
 }
 
 // ── Bandada embed ──
@@ -1393,6 +1422,331 @@ if (comparison && comparisonRange) {
 	comparisonRange.addEventListener("input", updateComparison);
 	updateComparison();
 	demonstrateComparison(comparisonRange, updateComparison);
+}
+
+// ── Edge Sight demo ──
+//
+// A fixed construction-site camera clip (generated scene) with REAL detections:
+// img/edgesight/edgesight-tracks.json holds YOLOv8 + ByteTrack boxes per frame
+// and the count/machinery events derived from them. The page only draws what the
+// file says. The slider clips the detection canvas, so "after" is the same clip
+// with boxes. The clip and the JSON load when the stage nears the viewport, and
+// it plays only while at least 40% visible. With reduced motion, the calm
+// version (motion-lite) or Save-Data it never autoplays: the poster shows with
+// the frame-0 boxes and a button plays it on demand.
+function initEdgeSightDemo(stage) {
+	const video = stage.querySelector("video");
+	const canvas = stage.querySelector("[data-edge-canvas]");
+	const toggle = document.querySelector("[data-edge-toggle]");
+	const countNode = document.querySelector("[data-edge-count]");
+	const logNode = document.querySelector("[data-edge-log]");
+	const ctx = canvas && canvas.getContext("2d");
+
+	if (!video || !ctx || !logNode) {
+		return;
+	}
+
+	const INK = "#1a1c1c";
+	const PAPER = "#ffffff";
+	const reduceQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+	const useFrameCallback = typeof video.requestVideoFrameCallback === "function";
+	let tracks = null;
+	let fps = 24;
+	let aspect = 1600 / 904;
+	let rect = { x: 0, y: 0, w: 0, h: 0 };
+	let dpr = 1;
+	let shown = -1;
+	let reached = -1;
+	let handle = 0;
+	let srcSet = false;
+	let inView = false;
+	let userPlayed = false;
+
+	const autoplayAllowed = () =>
+		!reduceQuery.matches && !isLite() && !(navigator.connection && navigator.connection.saveData);
+	let active = autoplayAllowed();
+
+	const pageLang = () => {
+		const lang = document.documentElement.lang;
+		return lang.startsWith("pt") ? "pt" : lang === "en" ? "en" : "es";
+	};
+	const text = (key) => (translations[pageLang()] || translations.es)[key] || "";
+	const pad = (n) => String(n).padStart(2, "0");
+
+	// The video is object-fit: contain; its rendered picture is this rect inside the
+	// stage, so boxes (0..1 of the picture) stay exact at every width.
+	const measure = () => {
+		const width = stage.clientWidth;
+		const height = stage.clientHeight;
+		const ratio = video.videoWidth && video.videoHeight ? video.videoWidth / video.videoHeight : aspect;
+		const w = width / height > ratio ? height * ratio : width;
+		const h = width / height > ratio ? height : width / ratio;
+		rect = { x: (width - w) / 2, y: (height - h) / 2, w, h };
+		dpr = window.devicePixelRatio || 1;
+		canvas.style.left = `${rect.x}px`;
+		canvas.style.top = `${rect.y}px`;
+		canvas.style.width = `${rect.w}px`;
+		canvas.style.height = `${rect.h}px`;
+		canvas.width = Math.max(1, Math.round(rect.w * dpr));
+		canvas.height = Math.max(1, Math.round(rect.h * dpr));
+		draw(Math.max(shown, 0));
+	};
+
+	const draw = (index) => {
+		shown = index;
+		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+		ctx.clearRect(0, 0, rect.w, rect.h);
+		if (!tracks) {
+			return;
+		}
+
+		const compact = rect.w < 520;
+		const labelHeight = compact ? 13 : 15;
+		ctx.font = `600 ${compact ? 9 : 10}px "Geist Mono", monospace`;
+		ctx.textBaseline = "middle";
+
+		// People first so the inverted machinery label always stays on top.
+		const boxes = (tracks.frames[index] || []).slice().sort((a, b) => (a[1] === "machine") - (b[1] === "machine"));
+		boxes.forEach(([id, kind, conf, x1, y1, x2, y2]) => {
+			const machine = kind === "machine";
+			const x = Math.round(x1 * rect.w) + 0.5;
+			const y = Math.round(y1 * rect.h) + 0.5;
+			const w = Math.round((x2 - x1) * rect.w);
+			const h = Math.round((y2 - y1) * rect.h);
+
+			// A thin ink halo keeps the 1px paper line legible on bright footage.
+			ctx.lineWidth = 3;
+			ctx.strokeStyle = "rgba(26, 28, 28, 0.55)";
+			ctx.strokeRect(x, y, w, h);
+			ctx.lineWidth = 1;
+			ctx.strokeStyle = PAPER;
+			ctx.strokeRect(x, y, w, h);
+
+			const score = conf.toFixed(2);
+			const label = machine
+				? compact
+					? text("edgeLabelMachine")
+					: `${text("edgeLabelMachine")} · ${score}`
+				: compact
+					? pad(id)
+					: `${text("edgeLabelPerson")} ${pad(id)} · ${score}`;
+			const labelWidth = Math.ceil(ctx.measureText(label).width) + 8;
+			const lx = Math.min(Math.max(x - 0.5, 0), rect.w - labelWidth);
+			const ly = y - labelHeight >= 0 ? y - labelHeight : y;
+			ctx.fillStyle = machine ? INK : PAPER;
+			ctx.fillRect(lx, ly, labelWidth, labelHeight);
+			if (machine) {
+				ctx.strokeStyle = PAPER;
+				ctx.strokeRect(lx + 0.5, ly + 0.5, labelWidth - 1, labelHeight - 1);
+			}
+			ctx.fillStyle = machine ? PAPER : INK;
+			ctx.fillText(label, lx + 4, ly + labelHeight / 2 + 0.5);
+		});
+	};
+
+	const formatTime = (seconds) => {
+		const minutes = Math.floor(seconds / 60);
+		return `${pad(minutes)}:${(seconds - minutes * 60).toFixed(1).padStart(4, "0")}`;
+	};
+
+	const renderLog = (due) => {
+		const firstPeople = tracks.events.findIndex((event) => event.type === "people_count");
+		const lines = due.map((event, i) => {
+			const message =
+				event.type === "machine_in_view"
+					? text("edgeLogMachine")
+					: text(i === firstPeople ? "edgeLogScene" : "edgeLogPeople").replace("{n}", String(event.n));
+			const item = document.createElement("li");
+			const time = document.createElement("time");
+			time.textContent = formatTime(event.t);
+			item.append(time, ` · ${message}`);
+			return item;
+		});
+		logNode.replaceChildren(...lines);
+		const lastPeople = due.filter((event) => event.type === "people_count").pop();
+		if (countNode && lastPeople) {
+			countNode.textContent = String(lastPeople.n);
+		}
+	};
+
+	// Events appear as playback reaches them and clear again when the clip loops.
+	const sync = (time) => {
+		if (!tracks) {
+			return;
+		}
+		const index = Math.min(tracks.frames.length - 1, Math.max(0, Math.round(time * fps)));
+		if (index !== shown) {
+			draw(index);
+		}
+		const due = tracks.events.filter((event) => event.t <= time + 0.001);
+		if (due.length !== reached) {
+			reached = due.length;
+			renderLog(due);
+		}
+	};
+
+	const tick = (now, metadata) => {
+		handle = 0;
+		sync(metadata && typeof metadata.mediaTime === "number" ? metadata.mediaTime : video.currentTime);
+		if (!video.paused && !video.ended) {
+			schedule();
+		}
+	};
+	const schedule = () => {
+		if (!handle) {
+			handle = useFrameCallback ? video.requestVideoFrameCallback(tick) : requestAnimationFrame(tick);
+		}
+	};
+	const unschedule = () => {
+		if (handle) {
+			if (useFrameCallback) {
+				video.cancelVideoFrameCallback(handle);
+			} else {
+				cancelAnimationFrame(handle);
+			}
+			handle = 0;
+		}
+	};
+
+	const refresh = () => {
+		if (toggle) {
+			const key = active ? "edgePause" : "edgePlay";
+			toggle.setAttribute("data-i18n", key);
+			toggle.textContent = text(key);
+		}
+		sync(video.currentTime || 0);
+		draw(Math.max(shown, 0));
+	};
+
+	const attachClip = () => {
+		// The src is in the HTML (so no-JS can play it) but preload="none" keeps it
+		// unfetched until the stage is near the viewport.
+		if (!srcSet) {
+			srcSet = true;
+			video.preload = "auto";
+			video.load();
+		}
+	};
+
+	const update = () => {
+		if (active && inView) {
+			attachClip();
+			const playing = video.play();
+			if (playing && typeof playing.catch === "function") {
+				playing.catch(() => {
+					active = false;
+					refresh();
+				});
+			}
+		} else if (!video.paused) {
+			video.pause();
+		}
+	};
+
+	// Reduced motion or the calm version switching on mid-visit stops an autoplay
+	// the visitor did not ask for; a clip they started themselves keeps going.
+	const reassess = () => {
+		if (active && !userPlayed && !autoplayAllowed()) {
+			active = false;
+			update();
+			refresh();
+		}
+	};
+
+	const loadTracks = () => {
+		fetch("img/edgesight/edgesight-tracks.json")
+			.then((response) => response.json())
+			.then((data) => {
+				tracks = data;
+				fps = data.fps || fps;
+				aspect = data.aspect || aspect;
+				measure();
+				reached = -1;
+				sync(video.currentTime || 0);
+			})
+			.catch(() => undefined);
+	};
+
+	const nearViewport = new IntersectionObserver(
+		(entries) => {
+			if (!entries.some((entry) => entry.isIntersecting)) {
+				return;
+			}
+			nearViewport.disconnect();
+			loadTracks();
+			if (active) {
+				attachClip();
+			}
+		},
+		{ rootMargin: "200px 0px" },
+	);
+
+	const visibility = new IntersectionObserver(
+		(entries) => {
+			const ratio = entries[entries.length - 1].intersectionRatio;
+			if (ratio >= 0.4) {
+				inView = true;
+			} else if (ratio < 0.1) {
+				inView = false;
+			} else {
+				return;
+			}
+			update();
+		},
+		{ threshold: [0.1, 0.4] },
+	);
+
+	if (toggle) {
+		toggle.hidden = false;
+		toggle.addEventListener("click", () => {
+			active = !active;
+			userPlayed = active;
+			update();
+			refresh();
+		});
+	}
+
+	video.addEventListener("playing", schedule);
+	video.addEventListener("pause", () => {
+		unschedule();
+		sync(video.currentTime);
+	});
+	video.addEventListener("seeked", () => sync(video.currentTime));
+	video.addEventListener("loadedmetadata", measure);
+	document.addEventListener("scapder:language", () => {
+		reached = -1;
+		refresh();
+	});
+	document.addEventListener("visibilitychange", () => {
+		if (document.hidden) {
+			video.pause();
+		} else {
+			update();
+		}
+	});
+	reduceQuery.addEventListener("change", reassess);
+	new MutationObserver(reassess).observe(document.documentElement, {
+		attributes: true,
+		attributeFilter: ["class"],
+	});
+	if (typeof ResizeObserver === "function") {
+		new ResizeObserver(measure).observe(stage);
+	}
+	if (document.fonts && document.fonts.ready) {
+		document.fonts.ready.then(() => draw(Math.max(shown, 0)));
+	}
+
+	measure();
+	refresh();
+	nearViewport.observe(stage);
+	visibility.observe(stage);
+}
+// end Edge Sight demo
+
+const edgeStage = document.querySelector("[data-edge-stage]");
+
+if (edgeStage && "IntersectionObserver" in window) {
+	initEdgeSightDemo(edgeStage);
 }
 
 const contactForm = document.querySelector("[data-contact-form]");

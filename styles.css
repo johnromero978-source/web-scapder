@@ -807,22 +807,114 @@ h3 {
 
 .comparison-stage {
 	position: relative;
-	aspect-ratio: 16 / 10;
+	/* The clip's own size (1600x904), reserved before the poster loads. */
+	aspect-ratio: 1600 / 904;
 	overflow: hidden;
-	background: var(--scapder-surface);
+	background: var(--scapder-inverse);
 	--comparison: 50%;
 }
 
-.comparison-stage img {
+.comparison-stage video {
 	position: absolute;
 	inset: 0;
 	width: 100%;
 	height: 100%;
-	object-fit: cover;
+	display: block;
+	/* script.js measures this contain box to place the detection overlay. */
+	object-fit: contain;
 }
 
+/* The detection layer: the full stage, clipped by the slider. The canvas inside
+   is sized by script.js to the video's rendered content rect. */
 .comparison-overlay {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
 	clip-path: inset(0 0 0 var(--comparison));
+}
+
+.comparison-overlay canvas {
+	position: absolute;
+	display: block;
+}
+
+.visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	padding: 0;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+	border: 0;
+}
+
+.edge-readout {
+	display: grid;
+	gap: 8px;
+	padding: 16px 20px 0;
+	background: var(--scapder-paper);
+	border-top: 1px solid var(--scapder-border);
+}
+
+.edge-readout-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 8px 16px;
+	min-height: 44px;
+}
+
+.edge-count {
+	margin: 0;
+	font-size: 13px;
+	color: var(--scapder-ink-soft);
+}
+
+.edge-count strong {
+	color: var(--scapder-ink);
+	font-weight: 800;
+	font-variant-numeric: tabular-nums;
+}
+
+.edge-toggle[hidden] {
+	display: none;
+}
+
+.edge-toggle {
+	padding-block: 8px;
+	font-size: 13px;
+}
+
+/* Four lines are reserved so the log filling up never moves the page. */
+.edge-log {
+	display: grid;
+	align-content: start;
+	min-height: 80px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	font-size: 12px;
+	line-height: 20px;
+	color: var(--scapder-ink-muted);
+	font-variant-numeric: tabular-nums;
+}
+
+.edge-log li:last-child {
+	color: var(--scapder-ink);
+	font-weight: 700;
+}
+
+.edge-log time {
+	font-family: inherit;
+}
+
+.edge-caption {
+	margin: 0;
+	font-size: 12px;
+	color: var(--scapder-ink-soft);
 }
 
 .comparison-divider {
@@ -872,7 +964,7 @@ h3 {
 .comparison-controls {
 	display: grid;
 	gap: 12px;
-	padding: 18px 20px 20px;
+	padding: 12px 20px 20px;
 	background: var(--scapder-paper);
 }
 
