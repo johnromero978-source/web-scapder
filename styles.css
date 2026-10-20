@@ -572,14 +572,12 @@ h3 {
 	text-decoration: none;
 	transition:
 		border-color 180ms ease,
-		transform 180ms ease,
 		background-color 180ms ease;
 }
 
 .product-card-link:hover,
 .product-card-link:focus-visible {
 	border-color: var(--scapder-border-strong);
-	transform: translateY(-2px);
 }
 
 .product-card-link:focus-visible {
@@ -1285,9 +1283,7 @@ h3 {
 .team-card,
 .method-grid article,
 .capability-list li {
-	transition:
-		border-color 180ms ease,
-		transform 180ms ease;
+	transition: border-color 180ms ease;
 }
 
 .case-card:hover,
@@ -1296,7 +1292,6 @@ h3 {
 .method-grid article:hover,
 .capability-list li:hover {
 	border-color: var(--scapder-ink);
-	transform: translateY(-2px);
 }
 
 /* ── Button Active Feedback ── */
@@ -1379,7 +1374,9 @@ button.product-card-link {
 	position: relative;
 	display: flex;
 	flex-direction: column;
-	width: min(720px, 100%);
+	width: min(1280px, 100%);
+	height: calc(100vh - 48px);
+	height: calc(100dvh - 48px);
 	/* The panel scrolls, not the overlay. When the overlay scrolled instead,
 	   content taller than the viewport pushed its own top off screen and took
 	   the close button with it. `dvh` so mobile browser chrome cannot clip it
@@ -1443,133 +1440,24 @@ button.product-card-link {
 	line-height: 1.6;
 }
 
-.modal-section-label {
-	margin: 32px 0 0;
-	padding-top: 24px;
-	border-top: 1px solid rgba(255, 255, 255, 0.18);
-	color: rgba(255, 255, 255, 0.62);
-	font-size: 12px;
-	letter-spacing: 0.12em;
-	text-transform: uppercase;
-}
-
-.modal-steps {
-	display: grid;
-	gap: 0;
-	margin: 16px 0 0;
-	padding: 0;
-	list-style: none;
-}
-
-.modal-steps li {
-	display: grid;
-	grid-template-columns: 32px minmax(0, 1fr);
-	gap: 4px 12px;
-	padding: 16px 0;
-	border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.modal-steps li:last-child {
-	border-bottom: 0;
-}
-
-.modal-step-index {
-	grid-row: span 2;
-	color: rgba(255, 255, 255, 0.42);
-	font-size: 13px;
-	font-variant-numeric: tabular-nums;
-}
-
-.modal-step-name {
-	font-weight: 700;
-}
-
-.modal-step-copy {
-	color: rgba(255, 255, 255, 0.72);
-	font-size: 14px;
-	line-height: 1.6;
-}
-
-.modal-facts {
-	display: grid;
-	grid-template-columns: repeat(4, minmax(0, 1fr));
-	gap: 16px;
-	margin: 20px 0 0;
-}
-
-.modal-facts dt {
-	color: rgba(255, 255, 255, 0.62);
-	font-size: 11px;
-	letter-spacing: 0.08em;
-	text-transform: uppercase;
-	line-height: 1.4;
-}
-
-.modal-facts dd {
-	margin: 6px 0 0;
-	font-size: 26px;
-	font-weight: 700;
-	font-variant-numeric: tabular-nums;
-	line-height: 1;
-}
-
-.modal-proof-copy {
-	margin: 20px 0 0;
-	color: rgba(255, 255, 255, 0.72);
-	font-size: 14px;
-	line-height: 1.6;
-}
-
-.modal-video {
-	margin-top: 32px;
-}
-
-.modal-video-frame {
+/* The embed fills what the header leaves of the panel. */
+.modal-embed {
 	position: relative;
-	width: 100%;
-	max-width: 100%;
-	aspect-ratio: 16 / 9;
+	flex: 1 1 auto;
+	min-height: 320px;
+	margin-top: 20px;
+	border: 1px solid rgba(255, 255, 255, 0.18);
+	border-radius: 8px;
 	overflow: hidden;
-	border-radius: 12px;
-	background: rgba(255, 255, 255, 0.08);
+	background: #0f0f0f;
 }
 
-.modal-video-poster {
-	position: absolute;
-	inset: 0;
-	width: 100%;
-	max-width: 100%;
-	height: 100%;
-	object-fit: cover;
+.modal-embed:focus-visible {
+	outline: 2px solid var(--scapder-inverse-ink);
+	outline-offset: 2px;
 }
 
-.modal-video-play {
-	position: absolute;
-	inset: 0;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: 10px;
-	width: 100%;
-	height: 100%;
-	border: none;
-	background: rgba(0, 0, 0, 0.35);
-	color: var(--scapder-inverse-ink);
-	font: inherit;
-	font-weight: 600;
-	cursor: pointer;
-}
-
-.modal-video-play:hover,
-.modal-video-play:focus-visible {
-	background: rgba(0, 0, 0, 0.5);
-}
-
-.modal-video-play .btn-youtube-mark {
-	width: 28px;
-}
-
-.modal-video-iframe {
+.modal-embed-iframe {
 	position: absolute;
 	inset: 0;
 	width: 100%;
@@ -1577,93 +1465,49 @@ button.product-card-link {
 	border: 0;
 }
 
-/* `hidden` alone does not hide these two: the `img` reset above and the play
-   button's own `display: flex` both outrank the user-agent `[hidden]` rule.
-   Without this, the play overlay survives its own teardown and sits on top of
-   the running player, swallowing every click meant for it. */
-.modal-video-poster[hidden],
-.modal-video-play[hidden] {
-	display: none;
-}
-
 .modal-actions {
 	display: flex;
-	flex-wrap: wrap;
-	gap: 12px;
-	margin-top: 32px;
+	justify-content: flex-end;
+	margin-top: 12px;
 }
 
-.modal-actions .btn {
-	border-color: rgba(255, 255, 255, 0.4);
+.modal-fullscreen {
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px;
+	padding: 0 4px;
+	color: rgba(255, 255, 255, 0.82);
+	font-size: 13px;
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+
+.modal-fullscreen:hover,
+.modal-fullscreen:focus-visible {
 	color: var(--scapder-inverse-ink);
 }
 
-.modal-actions .btn:hover,
-.modal-actions .btn:focus-visible {
-	border-color: var(--scapder-inverse-ink);
+.modal-fullscreen:focus-visible {
+	outline: 2px solid var(--scapder-inverse-ink);
+	outline-offset: 2px;
 }
 
-.modal-actions .btn-primary {
-	background: var(--scapder-inverse-ink);
-	border-color: var(--scapder-inverse-ink);
-	color: var(--scapder-ink);
-}
-
-.btn-youtube-mark {
-	width: 20px;
-	height: auto;
-	flex: none;
-}
-
-.modal-note {
-	margin: 16px 0 0;
-	color: rgba(255, 255, 255, 0.62);
-	font-size: 13px;
-	line-height: 1.5;
-}
-
-.modal-note[hidden] {
-	display: none;
-}
-
-@media (max-width: 720px) {
+@media (max-width: 640px) {
 	.modal {
-		padding: 12px;
+		padding: 0;
 	}
 
 	.modal-panel {
-		max-height: calc(100vh - 24px);
-		max-height: calc(100dvh - 24px);
-		padding: 24px 20px;
+		width: 100%;
+		height: 100vh;
+		height: 100dvh;
+		max-height: none;
+		border: 0;
+		border-radius: 0;
+		padding: 16px;
 	}
 
 	.modal-panel h2 {
 		font-size: 24px;
-	}
-
-	.modal-steps li {
-		grid-template-columns: minmax(0, 1fr);
-		gap: 4px;
-	}
-
-	.modal-step-index {
-		grid-row: auto;
-	}
-
-	.modal-facts {
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-	}
-
-	.modal-actions .btn {
-		width: 100%;
-	}
-
-	.modal-video-play {
-		gap: 8px;
-		font-size: 14px;
-	}
-
-	.modal-video-play .btn-youtube-mark {
-		width: 22px;
 	}
 }
