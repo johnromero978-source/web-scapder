@@ -308,7 +308,13 @@ const checks = [
       const hides = blocks.filter(([, , body]) => /(?:^|[;\s])opacity:\s*0\s*(?:;|$)/.test(body));
       return (
         hides.length > 0 &&
-        hides.every(([, selector]) => /^\s*(?:from|0%)\s*$/.test(selector) || /html\.motion/.test(selector))
+        hides.every(
+          ([, selector]) =>
+            /^\s*(?:from|0%)\s*$/.test(selector) ||
+            /html\.motion/.test(selector) ||
+            // decorative hover overlays (empty ::after boxes), never content
+            selector.split(",").every((part) => /::after\s*$/.test(part.trim())),
+        )
       );
     })(),
   },
@@ -548,6 +554,101 @@ const checks = [
     name: "system.md documents the narrow Sentientum sub-brand exception",
     pass: read("system.md").includes(
       "Sub-brand exception: the Sentientum product card carries Sentientum's own identity (Bandada palette, wordmark lockup, flock imagery) so it reads as the product it opens. Everything else stays monochrome.",
+    ),
+  },
+  {
+    // M4: slow machines get the calm version. Detection starts in the head gate.
+    name: "M4 head gate adds html.motion-lite from hardwareConcurrency, deviceMemory or saveData",
+    pass: (() => {
+      const head = indexHtml.slice(indexHtml.indexOf("<head>"), indexHtml.indexOf("</head>"));
+      const inline = [...head.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]).join("\n");
+      return (
+        inline.includes("motion-lite") &&
+        /hardwareConcurrency\s*<=\s*4/.test(inline) &&
+        /deviceMemory\s*<=\s*4/.test(inline) &&
+        inline.includes("saveData")
+      );
+    })(),
+  },
+  {
+    name: "M4 script.js samples idle frames once after load and adds motion-lite at runtime",
+    pass: (() => {
+      const start = scriptJs.indexOf("function sampleFrameRate");
+      const end = start + scriptJs.slice(start).search(/\r?\n\}\r?\n/);
+      const body = scriptJs.slice(start, end);
+      return (
+        start > -1 &&
+        body.includes("requestAnimationFrame") &&
+        body.includes('"motion-lite"') &&
+        body.includes("> 20") &&
+        body.includes("> 25") &&
+        body.includes("0.15") &&
+        scriptJs.includes("sampleFrameRate()")
+      );
+    })(),
+  },
+  {
+    name: "M4 styles neutralise the flow, capability rail, metric reveal and indicator crossfade under .motion-lite",
+    pass: (() => {
+      const css = read("styles.css").replace(/\/\*[\s\S]*?\*\//g, "");
+      const lite = [...css.matchAll(/([^{}]*\.motion-lite[^{}]*)\{([^{}]*)\}/g)];
+      const has = (needle, prop) =>
+        lite.some(([, selector, body]) => selector.includes(needle) && prop.test(body));
+      return (
+        has(".flow-list", /transition:\s*none/) &&
+        has(".capability-list", /transition:\s*none/) &&
+        has(".capability-list", /transform:\s*none/) &&
+        has(".section-indicator", /transition:\s*none/) &&
+        has(".case-metrics", /opacity:\s*1/) &&
+        has(".hero-robot", /animation:\s*none/)
+      );
+    })(),
+  },
+  {
+    name: "M4 gaze video, flow, rail, metrics and indicator swap are skipped under motion-lite",
+    pass: (() => {
+      const fn = (name) => {
+        const start = scriptJs.indexOf(`function ${name}`);
+        return scriptJs.slice(start, start + scriptJs.slice(start).search(/\r?\n\}\r?\n/));
+      };
+      return (
+        scriptJs.includes("function isLite") &&
+        ["turnHeroHead", "lightFlowSteps", "drawCapabilityLine", "revealCaseMetrics", "trackCurrentSection"].every(
+          (name) => fn(name).includes("isLite()"),
+        )
+      );
+    })(),
+  },
+  {
+    // Hover emphasis on large cards must not repaint during scroll: no colour
+    // transitions on them; an opacity overlay (or an instant change) instead.
+    name: "M4 large cards have no border/colour transitions (opacity overlay or instant)",
+    pass: (() => {
+      const css = read("styles.css").replace(/\/\*[\s\S]*?\*\//g, "");
+      const large = new Set([
+        ".case-card",
+        ".team-card",
+        ".method-grid article",
+        ".capability-list li",
+        ".product-card-sentientum",
+        ".case-metrics li",
+        ".case-metrics span",
+        ".team-card-name",
+      ]);
+      const offenders = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(([, selector, body]) => {
+        const transition = /transition(?:-property)?:\s*([^;]*)/.exec(body)?.[1] ?? "";
+        return (
+          /border|color|background/.test(transition) &&
+          selector.split(",").some((part) => large.has(part.trim()))
+        );
+      });
+      return offenders.length === 0 && /\.case-card::after[\s\S]*?opacity/.test(css);
+    })(),
+  },
+  {
+    name: "system.md Motion documents motion-lite",
+    pass: read("system.md").includes(
+      "On low-end devices (`motion-lite`), process explanations and the head turn are skipped and states are shown instantly.",
     ),
   },
   {

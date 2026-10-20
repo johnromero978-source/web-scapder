@@ -680,7 +680,6 @@ h3 {
 	background-position: center, 50% 20%;
 	background-size: auto, cover;
 	background-repeat: no-repeat;
-	transition: border-color 200ms ease;
 }
 
 .product-card-sentientum h3,
@@ -1396,19 +1395,36 @@ h3 {
    Product cards are not in this list: they are not clickable as a whole; their
    action is the control inside. */
 
+/* Large cards never transition border-color: repainting a big box on every
+   frame of a fade is what janks scrolling on slow machines. The ink border is
+   an overlay whose opacity (compositor-only) fades in on hover; the card's own
+   border stays put underneath. The team card clips its overflow, so it changes
+   instantly instead. */
 .case-card,
-.team-card,
 .method-grid article,
-.capability-list li {
-	transition: border-color 180ms ease;
+.product-card-sentientum {
+	position: relative;
 }
 
-.case-card:hover,
-.team-card:hover,
-.method-grid article:hover,
-.capability-list li:hover {
-	border-color: var(--scapder-ink);
+.case-card::after,
+.method-grid article::after,
+.capability-list li::after,
+.product-card-sentientum::after {
+	content: "";
+	position: absolute;
+	inset: -1px;
+	border: 1px solid var(--scapder-ink);
+	border-radius: inherit;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 180ms ease;
 }
+
+.product-card-sentientum::after {
+	border-color: var(--bandada-rose);
+	transition-duration: 200ms;
+}
+
 
 /* ── Purposeful motion (system.md > Motion) ──
    Four one-shot moments, each with a job: the hero arrives, the robot camera
@@ -1649,21 +1665,20 @@ html.motion .section-indicator span.is-swapping {
 
 /* Card hover emphasis: border, colour and filter only; nothing moves. */
 @media (hover: hover) and (pointer: fine) {
-	.product-card-sentientum:hover {
-		border-color: var(--bandada-rose);
+	.case-card:hover::after,
+	.method-grid article:hover::after,
+	.capability-list li:hover::after,
+	.product-card-sentientum:hover::after {
+		opacity: 1;
+	}
+
+	.team-card:hover {
+		border-color: var(--scapder-ink);
 	}
 
 	.product-card-sentientum:hover .product-card-action {
 		background: var(--bandada-text);
 		border-color: var(--bandada-text);
-	}
-
-	.case-metrics li {
-		transition: border-color 200ms ease;
-	}
-
-	.case-metrics span {
-		transition: color 200ms ease;
 	}
 
 	.case-card:hover .case-metrics li {
@@ -1687,7 +1702,6 @@ html.motion .section-indicator span.is-swapping {
 		text-decoration-color: transparent;
 		text-decoration-thickness: 1px;
 		text-underline-offset: 4px;
-		transition: text-decoration-color 200ms ease;
 	}
 
 	.team-card:hover .team-card-name {
@@ -1751,6 +1765,53 @@ html.motion .section-indicator span.is-swapping {
 	to {
 		opacity: 0.82;
 	}
+}
+
+/* ── Motion-lite (system.md > Motion) ──
+   html.motion-lite marks a slow machine (head gate, or the idle frame sample in
+   script.js, which can also turn it on after the page has started). Process
+   explanations are skipped and every state shows instantly: whatever script.js
+   armed before the verdict is released here. The hero entrance runs once at
+   load and stays; the lens-focus blur is dropped because blur is expensive. */
+
+html.motion-lite .hero-robot {
+	animation: none;
+}
+
+html.motion-lite .flow-list li,
+html.motion-lite .flow-list li::before {
+	transition: none;
+}
+
+html.motion-lite .capability-list::before,
+html.motion-lite .capability-list li::before,
+html.motion-lite .capability-list li span {
+	transition: none;
+}
+
+html.motion-lite .capability-list.cap-armed:not(.cap-in)::before,
+html.motion-lite .capability-list.cap-armed:not(.cap-in) li::before {
+	transform: none;
+}
+
+html.motion-lite .capability-list.cap-armed li span {
+	color: var(--scapder-ink);
+}
+
+html.motion-lite .section-indicator span {
+	transition: none;
+}
+
+html.motion-lite .section-indicator span.is-swapping {
+	opacity: 1;
+}
+
+html.motion.motion-lite .case-card.metrics-armed:not(.metrics-in) .case-metrics li {
+	opacity: 1;
+}
+
+html.motion-lite .case-card.metrics-in .case-metrics li {
+	animation: none;
 }
 
 /* ── Reduced Motion Override ── */

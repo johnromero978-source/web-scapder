@@ -750,6 +750,102 @@ function motionEnabled() {
 	);
 }
 
+// html.motion-lite (head gate, or sampleFrameRate below) marks a slow machine:
+// process explanations, the indicator crossfade and the head turn are skipped
+// and every state is shown instantly.
+function isLite() {
+	return document.documentElement.classList.contains("motion-lite");
+}
+
+// Resolves once we know whether this machine is slow: immediately when the head
+// gate already decided, otherwise after the idle frame sample below.
+let settleMotionLite = () => {};
+const motionLiteSettled = new Promise((resolve) => {
+	settleMotionLite = resolve;
+});
+
+// Once, after load, times a small CPU loop and then ~1s of idle frame intervals. A median
+// above 20ms, or 15% of frames above 25ms, means the page cannot keep 60fps
+// here, so the calm version takes over. Cheap: one rAF loop, one pass.
+function sampleFrameRate() {
+	if (!motionEnabled() || isLite() || !("requestAnimationFrame" in window)) {
+		settleMotionLite();
+		return;
+	}
+
+	const begin = () => {
+		if (document.hidden) {
+			// rAF is paused in background tabs; intervals would be meaningless.
+			settleMotionLite();
+			return;
+		}
+
+		// An idle page renders cheaply even on a slow CPU, so frame times alone
+		// miss it. A fixed 300k-step loop takes ~1.5ms on a modern desktop and
+		// 2-3x that or more on slow hardware: best of five, over 3.5ms is slow.
+		let best = Infinity;
+		for (let run = 0; run < 5; run += 1) {
+			const t0 = performance.now();
+			let sink = 0;
+			for (let i = 0; i < 300000; i += 1) {
+				sink += Math.sqrt(i) * (i & 3);
+			}
+			best = Math.min(best, performance.now() - t0 + (sink < 0 ? 1 : 0));
+		}
+
+		if (best > 3.5) {
+			document.documentElement.classList.add("motion-lite");
+			settleMotionLite();
+			return;
+		}
+
+		const intervals = [];
+		const start = performance.now();
+		let last = 0;
+
+		const sample = (now) => {
+			if (document.hidden) {
+				settleMotionLite();
+				return;
+			}
+
+			if (last) {
+				intervals.push(now - last);
+			}
+			last = now;
+
+			if (now - start < 1000) {
+				window.requestAnimationFrame(sample);
+				return;
+			}
+
+			const sorted = intervals.slice(1).sort((a, b) => a - b);
+
+			if (sorted.length >= 8) {
+				const median = sorted[Math.floor(sorted.length / 2)];
+				const slowShare = sorted.filter((value) => value > 25).length / sorted.length;
+
+				if (median > 20 || slowShare >= 0.15) {
+					document.documentElement.classList.add("motion-lite");
+				}
+			}
+
+			settleMotionLite();
+		};
+
+		window.requestAnimationFrame(sample);
+	};
+
+	// Wait for the entrance animations to finish so they do not count as load.
+	const afterLoad = () => window.setTimeout(begin, 1000);
+
+	if (document.readyState === "complete") {
+		afterLoad();
+	} else {
+		window.addEventListener("load", afterLoad, { once: true });
+	}
+}
+
 const easeInOut = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 
 // Sweeps the range from its current value to 65, then 35, then back (1.4s).
@@ -839,7 +935,7 @@ function demonstrateComparison(range, apply) {
 // is read. The numbers are never rewritten: the text in the DOM is always the
 // final text, so there is no counting and nothing to mis-announce.
 function revealCaseMetrics() {
-	if (!motionEnabled()) {
+	if (!motionEnabled() || isLite()) {
 		return;
 	}
 
@@ -870,7 +966,7 @@ revealCaseMetrics();
 // pipeline. Each step goes back to normal afterwards, so the page is unchanged
 // once the pass is over. Only a CSS class is toggled; no text is touched.
 function lightFlowSteps() {
-	if (!motionEnabled()) {
+	if (!motionEnabled() || isLite()) {
 		return;
 	}
 
@@ -888,7 +984,11 @@ function lightFlowSteps() {
 				}
 				observer.unobserve(entry.target);
 				Array.from(list.children).forEach((step, index) => {
-					window.setTimeout(() => step.classList.add("flow-lit"), index * 120);
+					window.setTimeout(() => {
+							if (!isLite()) {
+								step.classList.add("flow-lit");
+							}
+						}, index * 120);
 					window.setTimeout(() => step.classList.remove("flow-lit"), index * 120 + 420);
 				});
 			});
@@ -905,7 +1005,7 @@ lightFlowSteps();
 // is armed (rail collapsed) and the rail draws once as the section is read; the
 // step numbers and ticks follow it via transition delays in CSS.
 function drawCapabilityLine() {
-	if (!motionEnabled()) {
+	if (!motionEnabled() || isLite()) {
 		return;
 	}
 
@@ -959,7 +1059,7 @@ function trackCurrentSection() {
 			return;
 		}
 
-		if (motionEnabled() && indicator.classList.contains("is-active")) {
+		if (motionEnabled() && !isLite() && indicator.classList.contains("is-active")) {
 			label.classList.add("is-swapping");
 			swapTimer = window.setTimeout(() => {
 				label.textContent = value;
@@ -1050,6 +1150,7 @@ function turnHeroHead() {
 		!hero ||
 		!robot ||
 		!motionEnabled() ||
+		isLite() ||
 		!window.matchMedia("(hover: hover) and (pointer: fine)").matches
 	) {
 		return;
@@ -1200,6 +1301,15 @@ function turnHeroHead() {
 	};
 
 	const load = () => {
+		// The sample may still turn motion-lite on; the 1.4 MB clip waits for its verdict.
+		motionLiteSettled.then(() => {
+			if (!isLite()) {
+				fetchClip();
+			}
+		});
+	};
+
+	const fetchClip = () => {
 		const ready = new Promise((resolve, reject) => {
 			video.addEventListener("canplaythrough", resolve, { once: true });
 			video.addEventListener("error", reject, { once: true });
@@ -1228,6 +1338,7 @@ function turnHeroHead() {
 	}
 }
 turnHeroHead();
+sampleFrameRate();
 
 const comparison = document.querySelector("[data-comparison]");
 const comparisonRange = document.querySelector("[data-comparison-range]");
