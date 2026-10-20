@@ -104,9 +104,10 @@ a {
 	text-decoration: none;
 }
 
-.brand-name {
-	font-weight: 800;
-	letter-spacing: -0.06em;
+.brand-logo {
+	display: block;
+	width: auto;
+	height: 28px;
 }
 
 .nav {
@@ -1219,8 +1220,8 @@ h3 {
 		--container: min(100vw - 32px, 480px);
 	}
 
-	.brand-name {
-		font-size: 14px;
+	.brand-logo {
+		height: 24px;
 	}
 
 	.language-option {

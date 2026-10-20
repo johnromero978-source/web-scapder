@@ -31,6 +31,7 @@
 ## Tasks
 - [x] T1 Bandada embed replaces Sentientum modal content (iframe facade, lang sync, teardown, remove YouTube/steps/facts code and unused i18n keys, update card copy, update verifier). Route: delegated writer (3+ non-trivial files).
 - [x] T2 SEO: meta/canonical/hreflang strategy, OG/Twitter, JSON-LD Organization, favicon, robots.txt, sitemap.xml, `html lang` + title/description follow language, image weight (webp + width/height + lazy), `defer`, workflow copy list. Route: delegated writer.
+- [x] T2b Header shows the scapder wordmark (user request 2026-10-20). Route: inline (1 asset + 2 small edits).
 - [ ] T3 Design review: critique against `system.md` (impeccable), agree fixes with user, apply. Route: TBD after critique.
 
 ## Acceptance
@@ -50,6 +51,7 @@
 - Google Fonts stylesheet is still render-blocking (self-host Geist Mono if the user agrees to add the font files).
 - Delete or stop shipping the unreferenced multi-MB files under `img/` (the Pages job copies the whole folder).
 
-## Next step
-T3.
+- 2026-10-20: T2b done inline. Asset img/logo/scapder-wordmark-ink.png built from logo_scapder.png (luminance alpha, ink #1a1c1c). RED: verifier failed "header brand is the monochrome scapder wordmark". GREEN: verifier 23 checks pass; Playwright: logo loads 75x28 at 1440, 65x24 at 375, scrollWidth 1440/375.
 
+## Next step
+T3 design review.
