@@ -13,7 +13,7 @@
 	--scapder-inverse-ink: #ffffff;
 	--scapder-error: #ba1a1a;
 	--container: min(1440px, calc(100vw - 48px));
-	--robot-image: url("img/hero/scapder-bg-2k.webp");
+	--robot-image: url("img/hero/robot-gaze-00.webp");
 }
 
 * {
@@ -1706,51 +1706,20 @@ html.motion .section-indicator span.is-swapping {
 	text-underline-offset: 4px;
 }
 
-/* ── Hero robot eyes (system.md > Motion: the one pointer-following exception) ──
-   script.js builds these only for html.motion + a fine pointer, so nothing here
-   exists for touch, reduced motion or no-JS visitors. Each eye is a dark pupil
-   with a small glint laid over a camera lens in the photo, placed from the
-   lens centres in the image's own coordinates. Pupils move at most 8px. */
+/* ── Hero robot head turn (system.md > Motion: the one pointer-following exception) ──
+   script.js appends this canvas inside .hero-robot only for html.motion + a fine
+   pointer, once every frame is decoded. It inherits the photo's filter, opacity
+   and entrance, and covers the same box, so frame 0 on the canvas is the photo
+   itself. */
 
-.hero-eyes {
+.hero-gaze {
 	position: absolute;
 	inset: 0;
-	overflow: hidden;
+	display: block;
+	width: 100%;
+	height: 100%;
+	background: transparent;
 	pointer-events: none;
-}
-
-.hero-eye {
-	position: absolute;
-	left: 0;
-	top: 0;
-	border-radius: 50%;
-	background: #0e0e0e;
-	box-shadow: 0 0 5px 3px #0e0e0e;
-	pointer-events: none;
-	will-change: transform;
-}
-
-.hero-eye::after {
-	content: "";
-	position: absolute;
-	left: 26%;
-	top: 22%;
-	width: 24%;
-	height: 18%;
-	border-radius: 50%;
-	background: #ffffff;
-	opacity: 0.8;
-	transform: translate(var(--glint-x, 0px), var(--glint-y, 0px));
-}
-
-/* The pupils appear when the lens focus finishes, not before. */
-html.motion .hero-eye {
-	opacity: 0;
-	transition: opacity 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-html.motion .hero-eyes.is-ready .hero-eye {
-	opacity: 1;
 }
 
 /* ── Reduced Motion Override ── */

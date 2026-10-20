@@ -83,7 +83,7 @@ Scapder is a technical AI/data-intelligence company. The landing should feel pre
 - `prefers-reduced-motion: reduce`: no motion at all; the final state is shown immediately.
 - Content must be visible without JavaScript. Animation states are applied by JS adding a class (`html.motion` from the head gate, or a state class from `script.js`), never by default CSS hiding.
 - Still banned: generic fade-in-on-scroll for every section, parallax, cursor-following, floating or tilting cards, particle backgrounds, counters that tick up, looping decorative motion.
-- Pointer-following is banned except the hero robot's eyes (≤8px, eased, desktop fine pointer only, reduced-motion off).
+- Pointer-following is banned except the hero robot's head turn (pre-rendered frames from a keyframe-locked clip, eased, desktop fine pointer only, reduced-motion off).
 
 ## Layout Architecture
 Recommended marketing structure:

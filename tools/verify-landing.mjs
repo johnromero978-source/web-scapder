@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -390,21 +390,45 @@ const checks = [
     })(),
   },
   {
-    name: "M3 system.md allows pointer-following only for the hero robot eyes and keeps the general ban",
+    name: "R2 system.md allows pointer-following only for the hero robot head turn and keeps the general ban",
     pass: (() => {
       const system = read("system.md");
       const start = system.indexOf("### Motion");
       const motion = system.slice(start, system.indexOf("\n## ", start));
       return (
-        motion.includes("Pointer-following is banned except the hero robot's eyes (≤8px, eased, desktop fine pointer only, reduced-motion off).") &&
+        motion.includes("Pointer-following is banned except the hero robot's head turn (pre-rendered frames from a keyframe-locked clip, eased, desktop fine pointer only, reduced-motion off).") &&
+        !motion.includes("robot's eyes") &&
         /Still banned:[^\n]*cursor-following/.test(motion)
       );
     })(),
   },
   {
-    name: "M3 hero eyes: gated by motion + fine pointer, aria-hidden, pointer-events none, paused off-screen",
+    name: "R2 the M3 pupil overlay is gone (no .hero-eye in html/css/js)",
+    pass: !/hero-eye|followHeroEyes/.test(indexHtml + read("styles.css") + scriptJs),
+  },
+  {
+    name: "R2 hero background and preload use robot-gaze-00.webp (<250 KB, exists)",
+    pass:
+      read("styles.css").includes('url("img/hero/robot-gaze-00.webp")') &&
+      indexHtml.includes('rel="preload" as="image" href="img/hero/robot-gaze-00.webp"') &&
+      existsSync(resolve(root, "img/hero/robot-gaze-00.webp")) &&
+      statSync(resolve(root, "img/hero/robot-gaze-00.webp")).size < 250 * 1024,
+  },
+  {
+    name: "R2 gaze frames: at least 12 files after frame 00, under 1.6 MB total",
     pass: (() => {
-      const start = scriptJs.indexOf("function followHeroEyes");
+      const dir = resolve(root, "img/hero");
+      const frames = existsSync(dir)
+        ? readdirSync(dir).filter((name) => /^robot-gaze-(?!00)\d\d\.webp$/.test(name))
+        : [];
+      const total = frames.reduce((sum, name) => sum + statSync(resolve(dir, name)).size, 0);
+      return frames.length >= 12 && total < 1.6 * 1024 * 1024;
+    })(),
+  },
+  {
+    name: "R2 head turn: gated by motion + fine pointer, loads after load, canvas aria-hidden, IntersectionObserver, rAF eased",
+    pass: (() => {
+      const start = scriptJs.indexOf("function turnHeroHead");
       const end = start + scriptJs.slice(start).search(/\r?\n\}\r?\n/);
       const body = scriptJs.slice(start, end);
       const css = read("styles.css").replace(/\/\*[\s\S]*?\*\//g, "");
@@ -412,14 +436,16 @@ const checks = [
         start > -1 &&
         body.includes("motionEnabled()") &&
         body.includes("(hover: hover) and (pointer: fine)") &&
+        body.includes('"load"') &&
+        body.includes("robot-gaze-") &&
+        body.includes(".decode()") &&
         body.includes('"aria-hidden", "true"') &&
         body.includes("pointermove") &&
         body.includes("pointerleave") &&
         body.includes("requestAnimationFrame") &&
         body.includes("cancelAnimationFrame") &&
         body.includes("IntersectionObserver") &&
-        /\.hero-eyes\s*\{[^}]*pointer-events:\s*none/.test(css) &&
-        /html\.motion\s+\.hero-eye\b[^{]*\{[^}]*opacity:\s*0/.test(css)
+        /\.hero-gaze\s*\{[^}]*pointer-events:\s*none/.test(css)
       );
     })(),
   },
