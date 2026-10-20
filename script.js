@@ -1018,6 +1018,167 @@ function trackCurrentSection() {
 
 trackCurrentSection();
 
+// The hero photo shows a robot with two camera lenses. On a desktop with a fine
+// pointer (and no reduced-motion request) a dark pupil with a glint sits over
+// each lens and drifts at most 8px toward the cursor, eased, then settles back
+// when the cursor leaves. This is the one pointer-following exception in
+// system.md. The pupils are placed from the lens centres in the photo's own
+// 2000x1116 pixels, mapped through the same cover + position math the CSS uses,
+// and re-placed on resize. Everything is created here, so touch, reduced-motion
+// and no-JS visitors get the plain photo and no listeners.
+function followHeroEyes() {
+	const hero = document.querySelector(".hero");
+	const robot = document.querySelector(".hero-robot");
+
+	if (
+		!hero ||
+		!robot ||
+		!motionEnabled() ||
+		!window.matchMedia("(hover: hover) and (pointer: fine)").matches
+	) {
+		return;
+	}
+
+	const IMAGE = { width: 2000, height: 1116 };
+	const LENSES = [
+		{ x: 912, y: 438, radius: 32 },
+		{ x: 1471, y: 353, radius: 32 },
+	];
+	const MAX_SHIFT = 6; // px for the pupil; the glint adds up to 1.5px more.
+	const REACH = 360; // px of cursor distance at which the full shift is reached.
+	const EASE = 0.14;
+
+	const layer = document.createElement("div");
+	layer.className = "hero-eyes";
+	layer.setAttribute("aria-hidden", "true");
+
+	const eyes = LENSES.map((lens) => {
+		const element = document.createElement("div");
+		element.className = "hero-eye";
+		layer.append(element);
+		return { lens, element, cx: 0, cy: 0, x: 0, y: 0 };
+	});
+
+	robot.after(layer);
+
+	const place = () => {
+		const width = robot.offsetWidth;
+		const height = robot.offsetHeight;
+		const scale = Math.max(width / IMAGE.width, height / IMAGE.height);
+		const [posX, posY] = window
+			.getComputedStyle(robot)
+			.backgroundPosition.split(" ")
+			.map((value) => (value.endsWith("%") ? parseFloat(value) / 100 : 0.5));
+		const offsetX = (width - IMAGE.width * scale) * posX;
+		const offsetY = (height - IMAGE.height * scale) * posY;
+
+		eyes.forEach((eye) => {
+			const size = eye.lens.radius * 2 * scale;
+			eye.cx = offsetX + eye.lens.x * scale;
+			eye.cy = offsetY + eye.lens.y * scale;
+			eye.element.style.width = `${size}px`;
+			eye.element.style.height = `${size}px`;
+			eye.element.style.left = `${eye.cx - size / 2}px`;
+			eye.element.style.top = `${eye.cy - size / 2}px`;
+		});
+	};
+
+	const apply = (eye) => {
+		eye.element.style.transform = `translate(${eye.x.toFixed(2)}px, ${eye.y.toFixed(2)}px)`;
+		eye.element.style.setProperty("--glint-x", `${(eye.x * 0.25).toFixed(2)}px`);
+		eye.element.style.setProperty("--glint-y", `${(eye.y * 0.25).toFixed(2)}px`);
+	};
+
+	let pointer = null;
+	let visible = true;
+	let frame = 0;
+
+	const tick = () => {
+		frame = 0;
+		const rect = layer.getBoundingClientRect();
+		let moving = false;
+
+		eyes.forEach((eye) => {
+			let targetX = 0;
+			let targetY = 0;
+
+			if (pointer) {
+				const dx = pointer.x - (rect.left + eye.cx);
+				const dy = pointer.y - (rect.top + eye.cy);
+				const distance = Math.hypot(dx, dy) || 1;
+				const reach = Math.min(1, distance / REACH);
+				targetX = (dx / distance) * MAX_SHIFT * reach;
+				targetY = (dy / distance) * MAX_SHIFT * reach;
+			}
+
+			eye.x += (targetX - eye.x) * EASE;
+			eye.y += (targetY - eye.y) * EASE;
+
+			if (Math.abs(targetX - eye.x) > 0.02 || Math.abs(targetY - eye.y) > 0.02) {
+				moving = true;
+			}
+
+			apply(eye);
+		});
+
+		if (moving && visible) {
+			frame = window.requestAnimationFrame(tick);
+		}
+	};
+
+	const wake = () => {
+		if (!frame && visible) {
+			frame = window.requestAnimationFrame(tick);
+		}
+	};
+
+	hero.addEventListener(
+		"pointermove",
+		(event) => {
+			if (event.pointerType === "touch") {
+				return;
+			}
+			pointer = { x: event.clientX, y: event.clientY };
+			wake();
+		},
+		{ passive: true },
+	);
+
+	hero.addEventListener("pointerleave", () => {
+		pointer = null;
+		wake();
+	});
+
+	new IntersectionObserver((entries) => {
+		visible = entries[entries.length - 1].isIntersecting;
+
+		if (!visible) {
+			pointer = null;
+			window.cancelAnimationFrame(frame);
+			frame = 0;
+			eyes.forEach((eye) => {
+				eye.x = 0;
+				eye.y = 0;
+				apply(eye);
+			});
+		}
+	}).observe(hero);
+
+	if ("ResizeObserver" in window) {
+		new ResizeObserver(place).observe(robot);
+	}
+	window.addEventListener("resize", place);
+	place();
+
+	// Show the pupils once the lens focus (CSS animation on the photo) is done.
+	const focusing = typeof robot.getAnimations === "function" ? robot.getAnimations() : [];
+	Promise.all(focusing.map((animation) => animation.finished.catch(() => undefined))).then(() => {
+		layer.classList.add("is-ready");
+	});
+}
+
+followHeroEyes();
+
 const comparison = document.querySelector("[data-comparison]");
 const comparisonRange = document.querySelector("[data-comparison-range]");
 
