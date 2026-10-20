@@ -23,6 +23,7 @@ Scapder is a technical AI/data-intelligence company. The landing should feel pre
 ## Canonical Decisions
 - **Font:** Geist Mono across headings, body, labels, nav, buttons, and UI text.
 - **Palette:** strict monochrome/off-white/charcoal. No blue/purple AI SaaS palette.
+- Sub-brand exception: the Sentientum product card carries Sentientum's own identity (Bandada palette, wordmark lockup, flock imagery) so it reads as the product it opens. Everything else stays monochrome.
 - **Heading treatment:** title shadow may be used on H1/H2/H3 only.
 - **Body/support text:** no text shadow.
 - **Visual hero:** use the robot/background direction first; do not introduce extra imagery unless approved.

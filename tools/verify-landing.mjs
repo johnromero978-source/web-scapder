@@ -424,6 +424,39 @@ const checks = [
     })(),
   },
   {
+    name: "Sentientum card: article with the modal button, no heading inside a button",
+    pass:
+      /<article class="product-card product-card-sentientum"[^>]*>(?:(?!<\/article>)[\s\S])*<button[^>]*data-modal-open="sentientum-modal"/.test(indexHtml) &&
+      !/<button(?:(?!<\/button>)[\s\S])*<h3/i.test(indexHtml),
+  },
+  {
+    name: "Sentientum card: whole card opens the modal via a stretched ::after on the CTA",
+    pass: (() => {
+      const css = read("styles.css").replace(/\/\*[\s\S]*?\*\//g, "");
+      const rule = /\.product-card-sentientum\s+\.product-card-action::after\s*\{([^}]*)\}/.exec(css)?.[1] ?? "";
+      const card = /\.product-card-sentientum\s*\{([^}]*)\}/.exec(css)?.[1] ?? "";
+      return (
+        /position:\s*absolute/.test(rule) &&
+        (/inset:\s*0\b/.test(rule) || /top:\s*0[\s\S]*right:\s*0[\s\S]*bottom:\s*0[\s\S]*left:\s*0/.test(rule)) &&
+        /position:\s*relative/.test(card) &&
+        /cursor:\s*pointer/.test(card)
+      );
+    })(),
+  },
+  {
+    name: "Sentientum card background is an optimized (<150 KB WebP in img/sentientum)",
+    pass:
+      existsSync(resolve(root, "img/sentientum/bandada-card.webp")) &&
+      statSync(resolve(root, "img/sentientum/bandada-card.webp")).size < 150 * 1024 &&
+      read("styles.css").includes("img/sentientum/bandada-card.webp"),
+  },
+  {
+    name: "system.md documents the narrow Sentientum sub-brand exception",
+    pass: read("system.md").includes(
+      "Sub-brand exception: the Sentientum product card carries Sentientum's own identity (Bandada palette, wordmark lockup, flock imagery) so it reads as the product it opens. Everything else stays monochrome.",
+    ),
+  },
+  {
     name: "generic scroll reveal stays removed (no data-reveal)",
     pass: !indexHtml.includes("data-reveal") && !scriptJs.includes("data-reveal") && !read("styles.css").includes("data-reveal"),
   },

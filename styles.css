@@ -657,6 +657,97 @@ h3 {
 	font-size: 13px;
 }
 
+/* Sentientum sub-brand (system.md exception): this card wears the product's
+   own identity, sampled from bandada.scapder.com (:root --ink, --text, --muted,
+   --accent, --rose and the Martian Mono wordmark). Nothing else on the page
+   uses these colours. The still is Bandada's own first screen; one flat
+   tonal scrim keeps the copy above 4.5:1. */
+.product-card-sentientum {
+	--bandada-ink: #15122e;
+	--bandada-text: #efeaff;
+	--bandada-muted: #cfc6f5;
+	--bandada-accent: #b9a6f7;
+	--bandada-rose: #ff9fd6;
+	position: relative;
+	cursor: pointer;
+	border-color: rgba(185, 166, 247, 0.4);
+	background-color: var(--bandada-ink);
+	background-image:
+		linear-gradient(rgba(21, 18, 46, 0.44), rgba(21, 18, 46, 0.44)),
+		url("img/sentientum/bandada-card.webp");
+	background-position: center, 50% 20%;
+	background-size: auto, cover;
+	background-repeat: no-repeat;
+	transition: border-color 200ms ease;
+}
+
+.product-card-sentientum h3,
+.product-card-sentientum .sentientum-by {
+	color: var(--bandada-text);
+}
+
+.sentientum-lockup {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	column-gap: 10px;
+	margin-bottom: 18px;
+}
+
+.product-card-sentientum h3 {
+	margin: 0;
+	font-family: "Martian Mono", "Geist Mono", monospace;
+	font-weight: 800;
+	letter-spacing: -0.04em;
+}
+
+.sentientum-by {
+	font-size: 11px;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+}
+
+.section-inverse .product-card-sentientum .product-category,
+.section-inverse .product-card-sentientum li {
+	color: var(--bandada-muted);
+}
+
+.section-inverse .product-card-sentientum p:not(.product-category) {
+	color: var(--bandada-text);
+}
+
+.product-card-sentientum li {
+	border-top-color: var(--bandada-accent);
+}
+
+.product-card-sentientum .product-card-action {
+	border-color: var(--bandada-accent);
+	background: var(--bandada-accent);
+	color: var(--bandada-ink);
+	transition:
+		background 200ms ease,
+		border-color 200ms ease;
+}
+
+/* Stretched link: the real button's box grows to the whole card, so a click
+   anywhere opens the dialog while the markup stays one button in one article. */
+.product-card-sentientum .product-card-action::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+}
+
+/* The ring goes around the whole card, not just the control it belongs to. */
+.section-inverse .product-card-sentientum .product-card-action:focus-visible {
+	outline: none;
+}
+
+.product-card-sentientum:has(.product-card-action:focus-visible) {
+	outline: 2px solid var(--bandada-rose);
+	outline-offset: 4px;
+}
+
 .edgesight-grid {
 	display: grid;
 	grid-template-columns: 0.84fr 1.16fr;
@@ -1554,6 +1645,15 @@ html.motion .section-indicator span.is-swapping {
 
 /* Card hover emphasis: border, colour and filter only; nothing moves. */
 @media (hover: hover) and (pointer: fine) {
+	.product-card-sentientum:hover {
+		border-color: var(--bandada-rose);
+	}
+
+	.product-card-sentientum:hover .product-card-action {
+		background: var(--bandada-text);
+		border-color: var(--bandada-text);
+	}
+
 	.case-metrics li {
 		transition: border-color 200ms ease;
 	}
