@@ -1406,6 +1406,206 @@ html.motion .case-card.metrics-in .case-metrics li:nth-child(3) {
 	animation-delay: 160ms;
 }
 
+/* ── Process and navigation motion (system.md > Motion, items 4 + indicator) ──
+   Edge Sight's five steps light up in turn, the capability rail draws top to
+   bottom, and the header says which numbered section you are in. The rail and
+   its ticks are a static line by default; only html.motion makes them draw. */
+
+.flow-list li::before {
+	justify-self: start;
+	padding: 3px 5px;
+	margin: -3px 0 -3px -5px;
+	border-radius: 2px;
+}
+
+html.motion .flow-list li {
+	transition:
+		border-color 200ms cubic-bezier(0.2, 0.8, 0.2, 1),
+		color 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+html.motion .flow-list li::before {
+	transition:
+		background-color 200ms cubic-bezier(0.2, 0.8, 0.2, 1),
+		color 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* script.js lights one step at a time and clears it ~420ms later, so the page
+   ends up exactly as it was: the pass is the explanation. */
+.flow-list li.flow-lit {
+	border-color: var(--scapder-ink);
+	color: var(--scapder-ink);
+}
+
+.flow-list li.flow-lit::before {
+	background: var(--scapder-ink);
+	color: var(--scapder-paper);
+}
+
+.capability-list {
+	position: relative;
+}
+
+.capability-list li {
+	position: relative;
+}
+
+.capability-list::before,
+.capability-list li::before {
+	content: "";
+	position: absolute;
+	background: var(--scapder-ink);
+	pointer-events: none;
+}
+
+.capability-list::before {
+	top: 0;
+	bottom: 0;
+	left: -9px;
+	width: 1px;
+	transform-origin: top;
+}
+
+.capability-list li::before {
+	top: 36px;
+	left: -9px;
+	width: 9px;
+	height: 1px;
+	transform-origin: left;
+}
+
+html.motion .capability-list.cap-armed::before {
+	transition: transform 700ms linear;
+}
+
+html.motion .capability-list.cap-armed:not(.cap-in)::before {
+	transform: scaleY(0);
+}
+
+html.motion .capability-list.cap-armed li::before {
+	transition: transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+html.motion .capability-list.cap-armed:not(.cap-in) li::before {
+	transform: scaleX(0);
+}
+
+html.motion .capability-list.cap-armed li span {
+	color: var(--scapder-ink-muted);
+	transition: color 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+html.motion .capability-list.cap-in li span {
+	color: var(--scapder-ink);
+}
+
+/* Ticks and numbers wait for the rail (700ms, linear) to reach each step. */
+html.motion .capability-list.cap-in li:nth-child(1)::before { transition-delay: 60ms; }
+html.motion .capability-list.cap-in li:nth-child(2)::before { transition-delay: 230ms; }
+html.motion .capability-list.cap-in li:nth-child(3)::before { transition-delay: 410ms; }
+html.motion .capability-list.cap-in li:nth-child(4)::before { transition-delay: 580ms; }
+html.motion .capability-list.cap-in li:nth-child(1) span { transition-delay: 60ms; }
+html.motion .capability-list.cap-in li:nth-child(2) span { transition-delay: 230ms; }
+html.motion .capability-list.cap-in li:nth-child(3) span { transition-delay: 410ms; }
+html.motion .capability-list.cap-in li:nth-child(4) span { transition-delay: 580ms; }
+
+/* Header section indicator. The slot is always reserved at desktop width so the
+   nav never shifts when it first appears. */
+.section-indicator {
+	display: none;
+	min-width: 7ch;
+	margin: 0;
+	color: var(--scapder-ink-soft);
+	font-size: 13px;
+	text-align: right;
+	white-space: nowrap;
+	visibility: hidden;
+}
+
+.section-indicator.is-active {
+	visibility: visible;
+}
+
+.section-indicator span {
+	color: var(--scapder-ink);
+	font-weight: 800;
+}
+
+html.motion .section-indicator span {
+	transition: opacity 90ms ease-out;
+}
+
+html.motion .section-indicator span.is-swapping {
+	opacity: 0;
+}
+
+@media (min-width: 1121px) {
+	.section-indicator {
+		display: block;
+	}
+}
+
+.nav a[aria-current="true"] {
+	color: var(--scapder-ink);
+	text-decoration: underline;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 8px;
+}
+
+/* Card hover emphasis: border, colour and filter only; nothing moves. */
+@media (hover: hover) and (pointer: fine) {
+	.case-metrics li {
+		transition: border-color 200ms ease;
+	}
+
+	.case-metrics span {
+		transition: color 200ms ease;
+	}
+
+	.case-card:hover .case-metrics li {
+		border-top-color: var(--scapder-ink);
+	}
+
+	.case-card:hover .case-metrics span {
+		color: var(--scapder-ink);
+	}
+
+	.team-card-media img {
+		transition: filter 200ms ease;
+	}
+
+	.team-card:hover .team-card-media img {
+		filter: grayscale(1) contrast(1.14);
+	}
+
+	.team-card-name {
+		text-decoration: underline;
+		text-decoration-color: transparent;
+		text-decoration-thickness: 1px;
+		text-underline-offset: 4px;
+		transition: text-decoration-color 200ms ease;
+	}
+
+	.team-card:hover .team-card-name {
+		text-decoration-color: var(--scapder-ink);
+	}
+}
+
+/* Keyboard focus gets the same emphasis wherever a card holds a focusable control. */
+.case-card:has(:focus-visible) .case-metrics li {
+	border-top-color: var(--scapder-ink);
+}
+
+.team-card:has(:focus-visible) .team-card-media img {
+	filter: grayscale(1) contrast(1.14);
+}
+
+.team-card:has(:focus-visible) .team-card-name {
+	text-decoration: underline;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 4px;
+}
+
 /* ── Reduced Motion Override ── */
 
 @media (prefers-reduced-motion: reduce) {

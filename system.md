@@ -74,7 +74,10 @@ Scapder is a technical AI/data-intelligence company. The landing should feel pre
 - Motion beyond hover/focus is allowed only when it has a purpose, and each piece runs once per page load:
   1. a one-time entrance on first load, opacity-led, ≤ ~900ms total;
   2. a one-time interaction demonstration that teaches a control, cancelled by any user input;
-  3. a one-time appearance of proof data when it first enters the viewport.
+  3. a one-time appearance of proof data when it first enters the viewport;
+  4. a one-time process explanation: a sequence that lights up or a connector line that draws as its section first enters the viewport (transform/opacity/colour only).
+- Navigation state is not decoration: the header section indicator (current section number, `aria-current` on the matching nav link) updates as you scroll, with at most a 150–200ms opacity crossfade, and still updates under reduced motion (instant).
+- Card hover may emphasise via border, colour or `filter` in 150–250ms for `(hover: hover) and (pointer: fine)` only; never lift, scale or translate.
 - Easing: ease-out curves (e.g. `cubic-bezier(0.2, 0.8, 0.2, 1)`). No bounce, spring, or overshoot. Transforms ≤ 8px.
 - `prefers-reduced-motion: reduce`: no motion at all; the final state is shown immediately.
 - Content must be visible without JavaScript. Animation states are applied by JS adding a class (`html.motion` from the head gate, or a state class from `script.js`), never by default CSS hiding.

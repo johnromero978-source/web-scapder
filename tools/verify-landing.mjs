@@ -327,6 +327,69 @@ const checks = [
     })(),
   },
   {
+    name: "M2 flow list lights up in sequence once, gated by motion",
+    pass: (() => {
+      const css = read("styles.css");
+      return (
+        scriptJs.includes("function lightFlowSteps") &&
+        scriptJs.includes("flow-lit") &&
+        scriptJs.includes("unobserve") &&
+        /html\.motion\s+\.flow-list/.test(css) &&
+        css.includes(".flow-list li.flow-lit")
+      );
+    })(),
+  },
+  {
+    name: "M2 capability connector is decorative, static by default, drawn under motion",
+    pass: (() => {
+      const css = read("styles.css").replace(/\/\*[\s\S]*?\*\//g, "");
+      return (
+        /\.capability-list::before[^{}]*\{[^}]*content:\s*""/.test(css) &&
+        /\.capability-list::before[^{}]*\{[^}]*pointer-events:\s*none/.test(css) &&
+        /html\.motion\s+\.capability-list\.cap-armed:not\(\.cap-in\)::before\s*\{[^}]*scaleY\(0\)/.test(css) &&
+        scriptJs.includes("function drawCapabilityLine") &&
+        scriptJs.includes("cap-in")
+      );
+    })(),
+  },
+  {
+    name: "M2 header shows the current section number and marks the nav link",
+    pass: (() => {
+      const css = read("styles.css");
+      return (
+        /class="section-indicator"[^>]*aria-hidden="true"/.test(indexHtml) &&
+        scriptJs.includes("function trackCurrentSection") &&
+        scriptJs.includes('"aria-current"') &&
+        css.includes('.nav a[aria-current="true"]') &&
+        css.includes(".section-indicator")
+      );
+    })(),
+  },
+  {
+    name: "M2 card hover emphasis is pointer-fine only and adds no lift",
+    pass: (() => {
+      const css = read("styles.css");
+      const at = css.indexOf("(hover: hover) and (pointer: fine)");
+      if (at < 0) return false;
+      const block = css.slice(at, at + css.slice(at).search(/\r?\n\}/));
+      return (
+        block.includes(".case-card:hover .case-metrics li") &&
+        block.includes(".team-card:hover .team-card-media img") &&
+        block.includes(".team-card:hover .team-card-name") &&
+        !/translate|\bscale\(/.test(block)
+      );
+    })(),
+  },
+  {
+    name: "system.md Motion names the M2 moments (process explanation, section indicator)",
+    pass: (() => {
+      const system = read("system.md");
+      const start = system.indexOf("### Motion");
+      const motion = system.slice(start, system.indexOf("\n## ", start)).toLowerCase();
+      return motion.includes("process") && motion.includes("section indicator");
+    })(),
+  },
+  {
     name: "generic scroll reveal stays removed (no data-reveal)",
     pass: !indexHtml.includes("data-reveal") && !scriptJs.includes("data-reveal") && !read("styles.css").includes("data-reveal"),
   },
