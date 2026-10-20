@@ -147,10 +147,39 @@ a {
 		background 160ms ease;
 }
 
-.nav a:hover,
 .footer-links a:hover {
 	color: var(--scapder-ink);
 	background: var(--scapder-surface);
+}
+
+/* Nav links draw a 1px ink underline from the left on hover and focus; the
+   current section (aria-current, set by script.js) keeps it drawn. */
+.nav a {
+	position: relative;
+}
+
+.nav a::after {
+	content: "";
+	position: absolute;
+	left: 12px;
+	right: 12px;
+	bottom: 10px;
+	height: 1px;
+	background: var(--scapder-ink);
+	transform: scaleX(0);
+	transform-origin: left center;
+	transition: transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+	pointer-events: none;
+}
+
+.nav a:hover {
+	color: var(--scapder-ink);
+}
+
+.nav a:hover::after,
+.nav a:focus-visible::after,
+.nav a[aria-current="true"]::after {
+	transform: scaleX(1);
 }
 
 .header-actions {
@@ -223,12 +252,34 @@ a {
 }
 
 .btn-primary {
+	position: relative;
+	isolation: isolate;
+	overflow: hidden;
 	background: var(--scapder-inverse);
 	color: var(--scapder-inverse-ink);
 }
 
-.btn-primary:hover {
-	background: #000000;
+/* Data fill (system.md > Motion): a soft-ink bar runs in from the left on hover
+   and keyboard focus. Transform only; the label stays paper-on-ink (9:1+). */
+.btn-primary::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	background: var(--scapder-ink-soft);
+	transform: scaleX(0);
+	transform-origin: left center;
+	transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+	pointer-events: none;
+}
+
+.btn-primary:hover::before,
+.btn-primary:focus-visible::before {
+	transform: scaleX(1);
+}
+
+.btn-primary:disabled::before {
+	transform: scaleX(0);
 }
 
 .btn-secondary {
@@ -1550,17 +1601,6 @@ h3 {
 	}
 }
 
-@keyframes metric-enter {
-	from {
-		opacity: 0;
-		transform: translateY(6px);
-	}
-
-	to {
-		opacity: 1;
-		transform: none;
-	}
-}
 
 html.motion .system-line,
 html.motion .hero h1,
@@ -1592,22 +1632,6 @@ html.motion .hero-robot {
 	animation: robot-focus 900ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
 }
 
-/* script.js arms a card only after it is sure it can reveal it. */
-html.motion .case-card.metrics-armed:not(.metrics-in) .case-metrics li {
-	opacity: 0;
-}
-
-html.motion .case-card.metrics-in .case-metrics li {
-	animation: metric-enter 360ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-
-html.motion .case-card.metrics-in .case-metrics li:nth-child(2) {
-	animation-delay: 80ms;
-}
-
-html.motion .case-card.metrics-in .case-metrics li:nth-child(3) {
-	animation-delay: 160ms;
-}
 
 /* ── Process and navigation motion (system.md > Motion, items 4 + indicator) ──
    Edge Sight's five steps light up in turn, the capability rail draws top to
@@ -1750,9 +1774,6 @@ html.motion .section-indicator span.is-swapping {
 
 .nav a[aria-current="true"] {
 	color: var(--scapder-ink);
-	text-decoration: underline;
-	text-decoration-thickness: 1px;
-	text-underline-offset: 8px;
 }
 
 /* Card hover emphasis: border, colour and filter only; nothing moves. */
@@ -1859,6 +1880,224 @@ html.motion .section-indicator span.is-swapping {
 	}
 }
 
+/* ── Data-signal effects (system.md > Motion, data-signal exceptions) ──
+   "Your Data has a Voice": the page decodes its information as it is read.
+   Every state below is created by script.js under html.motion (never by default
+   CSS), and html.motion-lite removes all of it (see Motion-lite below). */
+
+/* 1. Heading decode. The real heading stays in the DOM and keeps its box; while
+   an aria-hidden clone (.decode-layer) scrambles on top, the real glyphs are
+   painted transparent. Outside motion-lite only, so lite always shows text. */
+html.motion .is-decoding {
+	position: relative;
+}
+
+html.motion:not(.motion-lite) .is-decoding {
+	-webkit-text-fill-color: transparent;
+	text-shadow: none;
+}
+
+.decode-layer {
+	position: absolute;
+	inset: 0;
+	display: inherit;
+	gap: inherit;
+	padding: inherit;
+	-webkit-text-fill-color: currentColor;
+	pointer-events: none;
+	user-select: none;
+	contain: layout style;
+}
+
+/* 2. Signal line: a 1px line in the left gutter, section 01 to 07. Each segment
+   carries the colour of the section it crosses; its fill scales with scroll
+   (script.js writes transform only). Wide screens only: phones have no gutter. */
+.signal-line {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 1px;
+	height: 0;
+	z-index: 2;
+	pointer-events: none;
+}
+
+.signal-seg {
+	position: absolute;
+	left: 0;
+	width: 1px;
+	background: rgba(26, 28, 28, 0.14);
+}
+
+.signal-seg.is-dark {
+	background: rgba(255, 255, 255, 0.18);
+}
+
+.signal-fill {
+	position: absolute;
+	inset: 0;
+	background: var(--scapder-ink);
+	transform: scaleY(0);
+	transform-origin: 50% 0;
+	will-change: transform;
+}
+
+.signal-seg.is-dark .signal-fill {
+	background: var(--scapder-inverse-ink);
+}
+
+/* A tap where the line meets a section number; it turns ink once the signal
+   reaches it, and so does the number. */
+.signal-tap {
+	position: absolute;
+	left: 0;
+	width: 8px;
+	height: 1px;
+	background: rgba(26, 28, 28, 0.22);
+}
+
+.signal-tap.is-dark {
+	background: rgba(255, 255, 255, 0.28);
+}
+
+.signal-tap::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: var(--scapder-ink);
+	opacity: 0;
+	transition: opacity 200ms ease-out;
+}
+
+.signal-tap.is-dark::after {
+	background: var(--scapder-inverse-ink);
+}
+
+.signal-tap.is-reached::after {
+	opacity: 1;
+}
+
+html.motion .section-index {
+	transition: color 200ms ease-out;
+}
+
+html.motion:not(.motion-lite) .section-index.is-reached {
+	color: var(--scapder-ink);
+}
+
+html.motion:not(.motion-lite) .section-inverse .section-index.is-reached {
+	color: var(--scapder-inverse-ink);
+}
+
+@media (max-width: 1023px) {
+	.signal-line {
+		display: none;
+	}
+}
+
+/* 3. Metric scan. A paper cover with a 1px ink leading edge sits over the three
+   metrics of an armed card and slides off to the right once (transform only),
+   uncovering the real numbers behind the scan line. Replaces the M1 fade. */
+html.motion .case-card.metrics-armed:not(.metrics-done) .case-metrics {
+	position: relative;
+	overflow: hidden;
+}
+
+html.motion .case-card.metrics-armed:not(.metrics-done) .case-metrics::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	background: var(--scapder-paper);
+	border-left: 1px solid var(--scapder-ink);
+	pointer-events: none;
+}
+
+html.motion .case-card.metrics-in .case-metrics::before {
+	animation: metric-scan 620ms cubic-bezier(0.45, 0, 0.2, 1) 60ms both;
+}
+
+@keyframes metric-scan {
+	from {
+		transform: translateX(0);
+	}
+
+	to {
+		transform: translateX(calc(100% + 2px));
+	}
+}
+
+/* 4. Edge Sight reticle (fine pointer only, built by script.js). It never takes
+   pointer events; the native cursor is hidden on the video only. */
+html.motion .edge-reticle {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 64px;
+	height: 64px;
+	margin: -32px 0 0 -32px;
+	z-index: 3;
+	pointer-events: none;
+	opacity: 0;
+	transition: opacity 150ms ease-out;
+	will-change: transform;
+}
+
+html.motion .edge-reticle.is-on {
+	opacity: 1;
+}
+
+.edge-reticle svg {
+	display: block;
+	overflow: visible;
+	fill: none;
+	shape-rendering: crispEdges;
+}
+
+.edge-reticle-halo {
+	stroke: rgba(26, 28, 28, 0.55);
+	stroke-width: 3;
+}
+
+.edge-reticle-mark {
+	stroke: var(--scapder-paper);
+	stroke-width: 1;
+}
+
+.edge-reticle-readout {
+	position: absolute;
+	top: calc(100% + 6px);
+	left: calc(100% + 2px);
+	padding: 4px 6px;
+	border-radius: 2px;
+	background: var(--scapder-inverse);
+	color: var(--scapder-inverse-ink);
+	font-size: 11px;
+	line-height: 1;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+.edge-reticle.is-flip-x .edge-reticle-readout {
+	left: auto;
+	right: calc(100% + 2px);
+}
+
+.edge-reticle.is-flip-y .edge-reticle-readout {
+	top: auto;
+	bottom: calc(100% + 6px);
+}
+
+.has-reticle {
+	cursor: none;
+}
+
+.has-reticle button,
+.has-reticle input,
+.has-reticle a {
+	cursor: pointer;
+}
+
 /* ── Motion-lite (system.md > Motion) ──
    html.motion-lite marks a slow machine (head gate, or the idle frame sample in
    script.js, which can also turn it on after the page has started). Process
@@ -1898,12 +2137,16 @@ html.motion-lite .section-indicator span.is-swapping {
 	opacity: 1;
 }
 
-html.motion.motion-lite .case-card.metrics-armed:not(.metrics-in) .case-metrics li {
-	opacity: 1;
+/* M5: the data-signal effects simply do not exist here; the final state shows. */
+html.motion-lite .decode-layer,
+html.motion-lite .signal-line,
+html.motion-lite .case-metrics::before,
+html.motion-lite .edge-reticle {
+	display: none;
 }
 
-html.motion-lite .case-card.metrics-in .case-metrics li {
-	animation: none;
+html.motion-lite .has-reticle {
+	cursor: auto;
 }
 
 /* ── Reduced Motion Override ── */

@@ -84,7 +84,14 @@ Scapder is a technical AI/data-intelligence company. The landing should feel pre
 - Content must be visible without JavaScript. Animation states are applied by JS adding a class (`html.motion` from the head gate, or a state class from `script.js`), never by default CSS hiding.
 - Still banned: generic fade-in-on-scroll for every section, parallax, cursor-following, floating or tilting cards, particle backgrounds, counters that tick up, looping decorative motion.
 - Pointer-following is banned except the hero robot's head turn (pre-rendered frames from a keyframe-locked clip, eased, desktop fine pointer only, reduced-motion off).
+- Data-signal exceptions ("Your Data has a Voice": the page decodes its information). Each is named, narrow and runs once unless it is bound to an interaction:
+  1. **Heading decode:** section H2s and the hero tagline (never the H1) resolve once when they first enter the viewport. Letters and digits cycle through a small mono glyph set and lock in left to right over ≤ ~700ms. The scramble lives in an `aria-hidden` layer over the real text, which never changes, so the accessible name, search text and layout stay exact from the first frame.
+  2. **Signal line:** a 1px line in the left gutter (≥1024px) runs from section 01 to 07 and fills with scroll position, its tip at the reading line; each section-number tap turns ink as the tip passes. Scroll-linked, `transform: scaleY` only, one passive listener + rAF. Parallax stays banned.
+  3. **Metric scan:** the first time a case card is read, a 1px ink scan line sweeps across its three metrics and uncovers them (transform-driven mask, ~600ms). The numbers are always the real text; nothing counts.
+  4. **Edge Sight reticle:** over the Edge Sight video only, on `(hover: hover) and (pointer: fine)`, a camera reticle (corner brackets, centre tick, `x 0.42 · y 0.61` readout) follows the pointer with a short ease and replaces the cursor there; it never takes pointer events and controls keep their cursor.
+- Primary buttons fill with ink from the left and nav links draw their underline from the left on hover and `:focus-visible` (`transform: scaleX`, 150–250ms). No lift, no scale of the control itself.
 - On low-end devices (`motion-lite`), process explanations and the head turn are skipped and states are shown instantly.
+- Under `motion-lite`, reduced motion and without JS, the heading decode, signal line, metric scan and reticle are skipped: headings and metrics render in their final state, there is no line and the native cursor stays.
 
 ## Layout Architecture
 Recommended marketing structure:
