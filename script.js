@@ -1,5 +1,3 @@
-document.documentElement.classList.add("reveal-enabled");
-
 const translations = {
 	es: {
 		metaTitle: "scapder — inteligencia accionable desde datos reales",
@@ -129,7 +127,7 @@ const translations = {
 			"Si tu organización tiene datos dispersos, infraestructura existente o modelos que necesitan llegar a operación, scapder puede ayudarte a convertirlos en inteligencia accionable.",
 		footerTagline: "Transformar datos en inteligencia accionable.",
 		sentientumDemoCta: "Ver la bandada",
-		sentientumDemoLabel: "Ver la bandada de Sentientum",
+		edgeCardCta: "Ver Edge Sight AI",
 		contactEmailLabel: "Email",
 		contactWhatsAppLabel: "WhatsApp",
 		contactFormName: "Nombre",
@@ -138,7 +136,7 @@ const translations = {
 		contactFormMessage: "Mensaje",
 		contactFormSubmit: "Enviar mensaje",
 		contactFormConsent:
-			"Autorizo el tratamiento de mis datos para responder esta solicitud. La política es provisional mientras se completa la información del responsable. Consultas de privacidad: haroldsthid@scapder.com.",
+			"Autorizo el tratamiento de mis datos para responder esta solicitud. Consultas de privacidad: haroldsthid@scapder.com.",
 		contactFormHelp:
 			"Enviaremos tu solicitud al equipo de scapder.",
 		contactFormPending: "Enviando mensaje…",
@@ -304,7 +302,7 @@ const translations = {
 			"If your organization has fragmented data, existing infrastructure, or models that need to reach operations, scapder can help turn them into actionable intelligence.",
 		footerTagline: "Turning data into actionable intelligence.",
 		sentientumDemoCta: "See the flock",
-		sentientumDemoLabel: "See the Sentientum flock",
+		edgeCardCta: "See Edge Sight AI",
 		contactEmailLabel: "Email",
 		contactWhatsAppLabel: "WhatsApp",
 		contactFormName: "Name",
@@ -313,7 +311,7 @@ const translations = {
 		contactFormMessage: "Message",
 		contactFormSubmit: "Send message",
 		contactFormConsent:
-			"I authorize the processing of my data to answer this request. The policy is provisional while the controller's information is completed. Privacy inquiries: haroldsthid@scapder.com.",
+			"I authorize the processing of my data to answer this request. Privacy inquiries: haroldsthid@scapder.com.",
 		contactFormHelp:
 			"We will send your request to the scapder team.",
 		contactFormPending: "Sending message…",
@@ -450,7 +448,7 @@ const translations = {
 		sentientumPillarTwo: "5 pasos",
 		sentientumPillarThree: "Dados de exemplo",
 		sentientumDemoCta: "Ver o bando",
-		sentientumDemoLabel: "Ver o bando do Sentientum",
+		edgeCardCta: "Ver Edge Sight AI",
 		mlspecCategory: "MLOps · Governança de IA",
 		mlspecOneLiner: "Sistema operacional para escalar modelos de ML.",
 		mlspecPillarOne: "Lab para produção",
@@ -515,7 +513,7 @@ const translations = {
 		contactFormMessage: "Mensagem",
 		contactFormSubmit: "Enviar mensagem",
 		contactFormConsent:
-			"Autorizo o tratamento dos meus dados para responder a esta solicitação. A política é provisória enquanto as informações do responsável são concluídas. Consultas de privacidade: haroldsthid@scapder.com.",
+			"Autorizo o tratamento dos meus dados para responder a esta solicitação. Consultas de privacidade: haroldsthid@scapder.com.",
 		contactFormHelp:
 			"Enviaremos sua solicitação à equipe da scapder.",
 		contactFormPending: "Enviando mensagem…",
@@ -830,61 +828,3 @@ if (contactForm) {
 		}
 	});
 }
-
-/* ── Scroll Reveal ── */
-
-(function () {
-	const prefersReducedMotion = window.matchMedia(
-		"(prefers-reduced-motion: reduce)"
-	);
-
-	function revealOnScroll() {
-		if (prefersReducedMotion.matches) {
-			document.querySelectorAll("[data-reveal]").forEach(function (el, i) {
-				el.classList.add("no-motion");
-				el.style.transitionDelay = (i * 30) + "ms";
-			});
-			return;
-		}
-
-		var revealEls = document.querySelectorAll("[data-reveal]");
-		if (!revealEls.length) return;
-
-		var observer = new IntersectionObserver(
-			function (entries) {
-				entries.forEach(function (entry, idx) {
-					if (!entry.isIntersecting) return;
-					var el = entry.target;
-					var siblings =
-						el.parentNode.querySelectorAll("[data-reveal]");
-					var index = Array.prototype.indexOf.call(
-						siblings,
-						el
-					);
-					el.style.transitionDelay = (index * 72) + "ms";
-					el.classList.add("is-revealed");
-					observer.unobserve(el);
-				});
-			},
-			{ rootMargin: "0px 0px -48px 0px", threshold: 0.12 }
-		);
-
-		revealEls.forEach(function (el) {
-			observer.observe(el);
-		});
-	}
-
-	if (document.readyState === "loading") {
-		document.addEventListener("DOMContentLoaded", revealOnScroll);
-	} else {
-		revealOnScroll();
-	}
-
-	prefersReducedMotion.addEventListener("change", function () {
-		if (prefersReducedMotion.matches) {
-			document.querySelectorAll("[data-reveal]").forEach(function (el) {
-				el.classList.add("no-motion");
-			});
-		}
-	});
-})();

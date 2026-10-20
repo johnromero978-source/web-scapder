@@ -222,6 +222,47 @@ const checks = [
     name: "every img has explicit width and height",
     pass: [...indexHtml.matchAll(/<img\b[^>]*>/g)].every((m) => /\swidth="\d+"/.test(m[0]) && /\sheight="\d+"/.test(m[0])),
   },
+  {
+    // Cards are articles; a <button> wrapping headings and lists is invalid
+    // content model and flattens the h3 for assistive tech.
+    name: "product cards are articles and no button wraps a heading",
+    pass:
+      (indexHtml.match(/<article class="product-card[^"]*"/g) || []).length === 3 &&
+      !/<button(?:(?!<\/button>)[\s\S])*<h3/i.test(indexHtml),
+  },
+  {
+    name: "Sentientum CTA is a real button inside its article",
+    pass: /<article class="product-card[^"]*"[^>]*>(?:(?!<\/article>)[\s\S])*<button[^>]*data-modal-open="sentientum-modal"/.test(indexHtml),
+  },
+  {
+    name: "Edge Sight card links to the #edgesight section",
+    pass: /<article class="product-card[^"]*"[^>]*>(?:(?!<\/article>)[\s\S])*<a[^>]*href="#edgesight"[^>]*data-i18n="edgeCardCta"/.test(indexHtml),
+  },
+  {
+    name: "form controls inherit the page font (textarea, select)",
+    pass: /button,\s*a,\s*input,\s*textarea,\s*select\s*\{\s*font:\s*inherit/.test(read("styles.css")),
+  },
+  {
+    name: "consent text no longer calls the policy provisional",
+    pass: !/provisional|provisória/i.test(indexHtml) && !/provisional|provisória/i.test(scriptJs),
+  },
+  {
+    name: "no hover lift, press scale or glow left in styles (system.md)",
+    pass: (() => {
+      const css = read("styles.css");
+      return !css.includes("translateY(-1px)") && !/:active[^{]*\{[^}]*scale\(/.test(css) && !css.includes("0 0 40px");
+    })(),
+  },
+  {
+    name: "footer links to Edge Sight AI and the capability section has an id",
+    pass:
+      /<nav\s+class="footer-links"[\s\S]*?href="#edgesight"[\s\S]*?<\/nav>/.test(indexHtml) &&
+      /id="capability"/.test(indexHtml),
+  },
+  {
+    name: "focus is visible on dark surfaces",
+    pass: /\.section-inverse[^{]*:focus-visible|\.hero[^{]*:focus-visible/.test(read("styles.css")),
+  },
 ];
 
 const failed = checks.filter((check) => !check.pass);

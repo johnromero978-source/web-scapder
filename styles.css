@@ -42,7 +42,9 @@ img {
 
 button,
 a,
-input {
+input,
+textarea,
+select {
 	font: inherit;
 }
 
@@ -54,6 +56,20 @@ a {
 :focus-visible {
 	outline: 2px solid var(--scapder-border-strong);
 	outline-offset: 4px;
+}
+
+/* The ink outline above vanishes on the dark surfaces (#1c1b1b / #242424), so
+   anything focusable there switches to the inverse ink. The featured product
+   card is white inside a dark section and switches back. */
+.hero :focus-visible,
+.proof-strip :focus-visible,
+.section-inverse :focus-visible,
+.modal :focus-visible {
+	outline-color: var(--scapder-inverse-ink);
+}
+
+.section-inverse .product-card-featured :focus-visible {
+	outline-color: var(--scapder-border-strong);
 }
 
 .container {
@@ -152,7 +168,8 @@ a {
 
 .language-option {
 	min-width: 56px;
-	min-height: 40px;
+	min-height: 44px;
+	font-size: 13px;
 	border: 0;
 	background: transparent;
 	color: var(--scapder-ink-soft);
@@ -287,9 +304,7 @@ h1 {
 	font-weight: 800;
 	line-height: 0.9;
 	color: var(--scapder-inverse-ink);
-	text-shadow:
-		2px 2px 10px rgba(0, 0, 0, 0.48),
-		0 0 40px rgba(0, 0, 0, 0.28);
+	text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.48);
 }
 
 h2 {
@@ -568,33 +583,45 @@ h3 {
 	border-color: var(--scapder-paper);
 }
 
-.product-card-link {
-	color: inherit;
-	text-decoration: none;
-	transition:
-		border-color 180ms ease,
-		background-color 180ms ease;
+.product-card-static {
+	/* Same bottom edge as the cards that carry an action (24px gap + 44px
+	   control), so the three pillar lists stay on one line. */
+	padding-bottom: calc(28px + 24px + 44px);
 }
 
-.product-card-link:hover,
-.product-card-link:focus-visible {
-	border-color: var(--scapder-border-strong);
-}
-
-.product-card-link:focus-visible {
-	outline: 2px solid var(--scapder-border-strong);
-	outline-offset: 2px;
-}
-
-.product-card-cta {
-	margin-top: auto;
+.product-card-action {
+	align-self: flex-start;
+	margin-top: 24px;
+	min-height: 44px;
 	display: inline-flex;
 	align-items: center;
-	gap: 8px;
-	padding-top: 18px;
-	border-top: 1px solid currentColor;
-	font-size: 13px;
-	font-weight: 750;
+	padding: 0 18px;
+	border: 1px solid currentColor;
+	border-radius: 4px;
+	background: transparent;
+	color: var(--scapder-inverse-ink);
+	font-size: 14px;
+	font-weight: 700;
+	line-height: 1;
+	text-decoration: none;
+	cursor: pointer;
+	transition:
+		background 160ms ease,
+		color 160ms ease;
+}
+
+.product-card-action:hover {
+	background: var(--scapder-inverse-ink);
+	color: var(--scapder-inverse);
+}
+
+.product-card-featured .product-card-action {
+	color: var(--scapder-ink);
+}
+
+.product-card-featured .product-card-action:hover {
+	background: var(--scapder-ink);
+	color: var(--scapder-paper);
 }
 
 .section-inverse .product-card-featured .product-category,
@@ -726,9 +753,8 @@ h3 {
 	height: 44px;
 	transform: translate(-50%, -50%);
 	border: 1px solid var(--scapder-border-strong);
-	border-radius: 999px;
+	border-radius: 4px;
 	background: var(--scapder-paper);
-	box-shadow: 0 1px 8px rgba(0, 0, 0, 0.12);
 }
 
 .comparison-divider span::before,
@@ -848,16 +874,19 @@ h3 {
 	display: grid;
 	grid-template-columns: 24px minmax(0, 1fr);
 	gap: 12px;
-	align-items: start;
+	align-items: center;
+	/* The whole row is the hit area, not the 24px box. */
+	min-height: 44px;
+	cursor: pointer;
 	color: var(--scapder-ink-soft);
 	font-size: 12px;
 	font-weight: 400;
 }
 
 .contact-consent input {
-	width: 20px;
-	height: 20px;
-	margin: 2px 0 0;
+	width: 24px;
+	height: 24px;
+	margin: 0;
 	accent-color: var(--scapder-border-strong);
 }
 
@@ -1031,13 +1060,12 @@ h3 {
 	border: 1px solid var(--scapder-border);
 	border-radius: 4px;
 	background: var(--scapder-paper);
-	transition: border-color 180ms ease, transform 180ms ease, background-color 180ms ease;
+	transition: border-color 180ms ease, background-color 180ms ease;
 }
 
 .team-card-link:hover,
 .team-card-link:focus-visible {
 	border-color: var(--scapder-border-strong);
-	transform: translateY(-1px);
 }
 
 .team-card-link:focus-visible {
@@ -1262,25 +1290,11 @@ h3 {
 	}
 }
 
-/* ── Scroll Reveal ── */
-
-.reveal-enabled [data-reveal] {
-	opacity: 0;
-	transform: translateY(12px);
-	transition:
-		opacity 280ms ease,
-		transform 280ms ease;
-}
-
-.reveal-enabled [data-reveal]:where(.is-revealed, .no-motion) {
-	opacity: 1;
-	transform: translateY(0);
-}
-
-/* ── Card Hover Micro-interactions ── */
+/* ── Card Hover Micro-interactions ──
+   Product cards are not in this list: they are not clickable as a whole; their
+   action is the control inside. */
 
 .case-card,
-.product-card,
 .team-card,
 .method-grid article,
 .capability-list li {
@@ -1288,30 +1302,10 @@ h3 {
 }
 
 .case-card:hover,
-.product-card:hover,
 .team-card:hover,
 .method-grid article:hover,
 .capability-list li:hover {
 	border-color: var(--scapder-ink);
-}
-
-/* ── Button Active Feedback ── */
-
-.btn:active {
-	transform: scale(0.97);
-}
-
-/* ── Hero Panel Entrance (CSS-only, respects reduced-motion) ── */
-
-.hero-panel {
-	opacity: 0;
-	animation: hero-panel-in 320ms ease 500ms forwards;
-}
-
-@keyframes hero-panel-in {
-	to {
-		opacity: 1;
-	}
 }
 
 /* ── Reduced Motion Override ── */
@@ -1337,15 +1331,6 @@ h3 {
    than the page's off-white. Same tokens, same 4/8px radii, same 160ms motion
    budget as everything else here.
    ------------------------------------------------------------------------ */
-
-/* The card became a <button> when it stopped being a link; these are the
-   properties a button does not inherit and a card needs. */
-button.product-card-link {
-	width: 100%;
-	font: inherit;
-	text-align: left;
-	cursor: pointer;
-}
 
 .modal[hidden] {
 	display: none;
