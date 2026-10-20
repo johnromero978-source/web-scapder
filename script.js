@@ -865,6 +865,159 @@ function revealCaseMetrics() {
 
 revealCaseMetrics();
 
+// Edge Sight's five steps light up one after another (120ms apart, each held for
+// ~420ms) the first time the list is read, like a signal passing through the
+// pipeline. Each step goes back to normal afterwards, so the page is unchanged
+// once the pass is over. Only a CSS class is toggled; no text is touched.
+function lightFlowSteps() {
+	if (!motionEnabled()) {
+		return;
+	}
+
+	const list = document.querySelector(".flow-list");
+
+	if (!list) {
+		return;
+	}
+
+	const observer = new IntersectionObserver(
+		(entries) => {
+			entries.forEach((entry) => {
+				if (!entry.isIntersecting) {
+					return;
+				}
+				observer.unobserve(entry.target);
+				Array.from(list.children).forEach((step, index) => {
+					window.setTimeout(() => step.classList.add("flow-lit"), index * 120);
+					window.setTimeout(() => step.classList.remove("flow-lit"), index * 120 + 420);
+				});
+			});
+		},
+		{ threshold: 0.4 },
+	);
+
+	observer.observe(list);
+}
+
+lightFlowSteps();
+
+// The capability rail is a static line in CSS. When motion is allowed the list
+// is armed (rail collapsed) and the rail draws once as the section is read; the
+// step numbers and ticks follow it via transition delays in CSS.
+function drawCapabilityLine() {
+	if (!motionEnabled()) {
+		return;
+	}
+
+	const list = document.querySelector(".capability-list");
+
+	if (!list) {
+		return;
+	}
+
+	const observer = new IntersectionObserver(
+		(entries) => {
+			entries.forEach((entry) => {
+				if (!entry.isIntersecting) {
+					return;
+				}
+				list.classList.add("cap-in");
+				observer.unobserve(entry.target);
+			});
+		},
+		{ threshold: 0.3 },
+	);
+
+	list.classList.add("cap-armed");
+	observer.observe(list);
+}
+
+drawCapabilityLine();
+
+// Navigation state, not decoration: it also runs under reduced motion (the
+// number just changes instantly). The section whose body crosses a thin band
+// near the middle of the viewport is "current": its existing 01-07 number goes
+// in the header and its nav link gets aria-current. Sections without a number
+// (hero, proof strip) clear both.
+function trackCurrentSection() {
+	if (!("IntersectionObserver" in window)) {
+		return;
+	}
+
+	const indicator = document.querySelector(".section-indicator");
+	const label = indicator ? indicator.querySelector("[data-section-current]") : null;
+	const sections = Array.from(document.querySelectorAll("main > section"));
+	const links = Array.from(document.querySelectorAll(".nav a[href^='#']"));
+	const inBand = new Set();
+	let shownId = null;
+	let swapTimer = 0;
+
+	const setNumber = (value) => {
+		window.clearTimeout(swapTimer);
+
+		if (!label || label.textContent === value) {
+			return;
+		}
+
+		if (motionEnabled() && indicator.classList.contains("is-active")) {
+			label.classList.add("is-swapping");
+			swapTimer = window.setTimeout(() => {
+				label.textContent = value;
+				label.classList.remove("is-swapping");
+			}, 90);
+			return;
+		}
+
+		label.textContent = value;
+	};
+
+	const update = () => {
+		const section = sections.filter((candidate) => inBand.has(candidate)).pop();
+		const id = section ? section.id : null;
+
+		if (id === shownId) {
+			return;
+		}
+
+		shownId = id;
+
+		links.forEach((link) => {
+			if (section && link.getAttribute("href") === `#${id}`) {
+				link.setAttribute("aria-current", "true");
+			} else {
+				link.removeAttribute("aria-current");
+			}
+		});
+
+		const number = section ? section.querySelector(".section-index") : null;
+
+		if (indicator && number) {
+			setNumber(number.textContent.trim());
+			indicator.classList.add("is-active");
+		} else if (indicator) {
+			indicator.classList.remove("is-active");
+		}
+	};
+
+	const observer = new IntersectionObserver(
+		(entries) => {
+			entries.forEach((entry) => {
+				if (entry.isIntersecting) {
+					inBand.add(entry.target);
+				} else {
+					inBand.delete(entry.target);
+				}
+			});
+			update();
+		},
+		{ rootMargin: "-45% 0px -50% 0px" },
+	);
+
+	sections.forEach((section) => observer.observe(section));
+}
+
+trackCurrentSection();
+
 const comparison = document.querySelector("[data-comparison]");
 const comparisonRange = document.querySelector("[data-comparison-range]");
 

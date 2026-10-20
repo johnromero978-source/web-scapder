@@ -24,6 +24,9 @@ The user asked for animations (2026-10-20). `system.md` currently limits motion 
 ## Tasks
 - [x] M1 Amend `system.md` motion rule and implement the 4 animations with reduced-motion fallbacks. Route: delegated writer (system.md + CSS + JS + verifier).
 
+- [x] M2 Motion through the page (user 2026-10-20 "le falta animaciones"): (1) Edge Sight flow steps 01-05 light up in sequence; (2) capability 01-04 connected by a line drawn as they enter; (3) header section indicator using the existing 01-07 numbers; (4) livelier hover on case and team cards within 150-250ms. Route: delegated writer.
+- [ ] M3 Hero robot eyes follow the pointer (user approved an explicit system.md exception for this element only). Route: same writer, separate commit; ship only if it looks convincing.
+
 ## Acceptance
 - Each animation runs once; nothing animates under `prefers-reduced-motion: reduce` and the page is fully visible without JS.
 - No layout shift, no horizontal scroll at 375px, content never hidden if JS fails.
@@ -33,5 +36,9 @@ The user asked for animations (2026-10-20). `system.md` currently limits motion 
 - 2026-10-20: branch `feat/purposeful-motion` from `9e8aded`.
 - 2026-10-20 M1 done (route: delegated writer). system.md Motion widened (`.interface-design/system.md` is a pointer, unchanged). Head gate adds `html.motion` only for `prefers-reduced-motion: no-preference`. Hero: opacity + 8px translate, 400ms each, staggered 0/80/160/240/320ms (ends 720ms), cubic-bezier(0.2,0.8,0.2,1). Robot focus: blur(8px)+scale(1.03) to sharp, 900ms, same easing. Slider demo: 50 to 65 (400ms), to 35 (500ms), back (500ms), ease-in-out, rAF, starts at 50% visible, cancelled by pointerdown/keydown/focus/input or <10% visible, no events fired. Case metrics: card armed by JS, IntersectionObserver 0.3, 360ms opacity + 6px, 80ms stagger, no text changes. Evidence: RED 5 failing checks, GREEN `node tools/verify-landing.mjs` 37 checks; Playwright at 1440 and 375 all pass (CLS 0.008 / 0.017, reduced-motion and no-JS fully visible, modal ok); detector 27 findings, same as baseline.
 
+- 2026-10-20: M1 shipped (PR #3, 862a549). User asked for more motion; chose both page-wide life (M2) and a stronger hero moment (M3). Branch feat/motion-depth from 862a549.
+
+- 2026-10-20 M2 done (route: delegated writer). system.md Motion gains item 4 (one-time process explanation), the navigation-state indicator rule (crossfade <=200ms, still updates under reduced motion) and the hover-emphasis rule (fine pointer, no lift). Flow: IntersectionObserver 0.4 on the list, steps get .flow-lit 120ms apart and hold ~420ms, then return to normal (chosen so the page ends exactly as it started, like a signal passing through; no-JS state identical). Capability: 1px ink rail in the left gutter plus ticks to each step (static line by default, scaleY 0 to 1 in 700ms linear under html.motion + .cap-armed, linear so ticks/numbers at 60/230/410/580ms delays land when the rail reaches them; numbers go muted to ink). Header: "NN / 07" indicator (Geist Mono 13px, shown >=1121px, slot reserved so nothing shifts, 90ms out + 90ms in opacity swap under motion, instant otherwise) driven by an IntersectionObserver band at 45-50% of the viewport; aria-current="true" + 1px underline on the matching nav link (capability 06 has no link). Hover (fine pointer, 200ms): case card border + metric rules + labels to ink; team photo contrast 1.04 to 1.14, name underline; focus-visible equivalents via :has(). Evidence: RED 5 failing checks, GREEN `node tools/verify-landing.mjs` 42 checks; Playwright 1440 + 375 + header widths 375-1440 + reduced-motion + no-JS all pass (CLS 0.015 / 0.015, header 73px single row).
+
 ## Next step
-Review/PR decision (user).
+M3 (hero robot eyes; ship only if convincing).
