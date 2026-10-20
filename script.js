@@ -2,6 +2,9 @@ document.documentElement.classList.add("reveal-enabled");
 
 const translations = {
 	es: {
+		metaTitle: "scapder — inteligencia accionable desde datos reales",
+		metaDescription:
+			"scapder transforma datos complejos en inteligencia accionable mediante IA aplicada, co-creación y transferencia de capacidades.",
 		skip: "Saltar al contenido principal",
 		navApproach: "Enfoque",
 		navCases: "Casos",
@@ -176,6 +179,9 @@ const translations = {
 		bandadaFrameTitle: "Sentientum · del murmullo a la conclusión",
 	},
 	en: {
+		metaTitle: "scapder — actionable intelligence from real data",
+		metaDescription:
+			"scapder turns complex data into actionable intelligence through applied AI, co-creation and capability transfer.",
 		skip: "Skip to main content",
 		navApproach: "Approach",
 		navCases: "Cases",
@@ -348,6 +354,9 @@ const translations = {
 		bandadaFrameTitle: "Sentientum · from murmur to conclusion",
 	},
 	pt: {
+		metaTitle: "scapder — inteligência acionável a partir de dados reais",
+		metaDescription:
+			"A scapder transforma dados complexos em inteligência acionável por meio de IA aplicada, cocriação e transferência de capacidades.",
 		skip: "Pular para o conteúdo principal",
 		navApproach: "Abordagem",
 		navCases: "Casos",
@@ -529,6 +538,10 @@ const translations = {
 function applyLanguage(lang) {
 	const dictionary = translations[lang] || translations.es;
 	document.documentElement.lang = lang === "pt" ? "pt-BR" : lang;
+	document.title = dictionary.metaTitle;
+	document
+		.querySelector('meta[name="description"]')
+		?.setAttribute("content", dictionary.metaDescription);
 
 	document.querySelectorAll("[data-i18n]").forEach((node) => {
 		const key = node.getAttribute("data-i18n");

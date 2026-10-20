@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -127,6 +127,96 @@ const checks = [
       indexHtml.includes('data-comparison-range') &&
       scriptJs.includes('document.querySelector("[data-comparison]")') &&
       scriptJs.includes('document.querySelector("[data-comparison-range]")'),
+  },
+  {
+    name: "head carries canonical, robots and theme-color",
+    pass:
+      /<link rel="canonical" href="https:\/\/scapder\.com\/"/.test(indexHtml) &&
+      /<meta name="robots" content="index,follow"/.test(indexHtml) &&
+      /<meta name="theme-color" content="#[0-9a-f]{6}"/i.test(indexHtml),
+  },
+  {
+    name: "Open Graph and Twitter card tags are present with an absolute image",
+    pass:
+      ["og:title", "og:description", "og:url", "og:type", "og:site_name"].every((p) =>
+        indexHtml.includes(`property="${p}"`),
+      ) &&
+      /property="og:image" content="https:\/\/scapder\.com\/img\/og-scapder\.jpg"/.test(indexHtml) &&
+      indexHtml.includes('property="og:image:width"') &&
+      indexHtml.includes('property="og:image:alt"') &&
+      indexHtml.includes('name="twitter:card" content="summary_large_image"') &&
+      existsSync(resolve(root, "img/og-scapder.jpg")),
+  },
+  {
+    name: "JSON-LD Organization parses and only links profiles the repo owns",
+    pass: (() => {
+      const m = /<script type="application\/ld\+json">([\s\S]*?)<\/script>/.exec(indexHtml);
+      if (!m) return false;
+      try {
+        const data = JSON.parse(m[1]);
+        const nodes = data["@graph"] || [data];
+        const org = nodes.find((n) => n["@type"] === "Organization");
+        return Boolean(org && org.name === "scapder" && org.url === "https://scapder.com/");
+      } catch {
+        return false;
+      }
+    })(),
+  },
+  {
+    name: "favicon set is linked and exists",
+    pass:
+      /<link rel="icon"[^>]*href="favicon\.ico"/.test(indexHtml) &&
+      indexHtml.includes('rel="apple-touch-icon"') &&
+      ["favicon.ico", "favicon-32.png", "apple-touch-icon.png"].every((f) => existsSync(resolve(root, f))),
+  },
+  {
+    name: "robots.txt and sitemap.xml exist and ship with the Pages artifact",
+    pass: (() => {
+      const workflow = read(".github/workflows/pages.yml");
+      return (
+        existsSync(resolve(root, "robots.txt")) &&
+        existsSync(resolve(root, "sitemap.xml")) &&
+        /Sitemap: https:\/\/scapder\.com\/sitemap\.xml/.test(read("robots.txt")) &&
+        ["robots.txt", "sitemap.xml", "favicon.ico", "favicon-32.png", "apple-touch-icon.png"].every((f) =>
+          workflow.includes(f),
+        )
+      );
+    })(),
+  },
+  {
+    name: "language switch updates html lang, title and meta description in all languages",
+    pass:
+      scriptJs.includes("document.documentElement.lang") &&
+      scriptJs.includes("document.title") &&
+      scriptJs.includes('meta[name="description"]') &&
+      ["es", "en", "pt"].every((lang) => {
+        const start = scriptJs.indexOf(`\t${lang}: {`);
+        const dict = scriptJs.slice(start, scriptJs.indexOf("\n\t},", start));
+        return dict.includes("metaTitle:") && dict.includes("metaDescription:");
+      }),
+  },
+  {
+    // Weight is a ranking signal: no image the page asks for may exceed 300 KB.
+    name: "no page image is heavier than 300 KB",
+    pass: (() => {
+      const urls = [
+        ...[...indexHtml.matchAll(/(?:src|srcset|imagesrcset)="([^"]*img\/[^"]*)"/g)].flatMap((m) =>
+          m[1].split(",").map((part) => part.trim().split(/\s+/)[0]),
+        ),
+        ...[...read("styles.css").matchAll(/url\("([^"]*img\/[^"]*)"\)/g)].map((m) => m[1]),
+      ];
+      return (
+        urls.length > 0 &&
+        urls.every((u) => {
+          const file = resolve(root, decodeURIComponent(u));
+          return existsSync(file) && statSync(file).size <= 300 * 1024;
+        })
+      );
+    })(),
+  },
+  {
+    name: "every img has explicit width and height",
+    pass: [...indexHtml.matchAll(/<img\b[^>]*>/g)].every((m) => /\swidth="\d+"/.test(m[0]) && /\sheight="\d+"/.test(m[0])),
   },
 ];
 

@@ -13,7 +13,7 @@
 	--scapder-inverse-ink: #ffffff;
 	--scapder-error: #ba1a1a;
 	--container: min(1440px, calc(100vw - 48px));
-	--robot-image: url("img/hero/scapder-bg-2k.jpeg");
+	--robot-image: url("img/hero/scapder-bg-2k.webp");
 }
 
 * {
