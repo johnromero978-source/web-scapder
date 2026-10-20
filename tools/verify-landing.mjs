@@ -18,9 +18,13 @@ const checks = [
   },
   {
     name: "lowercase scapder branding in visible core copy",
+    pass: indexHtml.includes('<h1 id="hero-title" data-i18n="heroTitle">scapder</h1>'),
+  },
+  {
+    name: "header brand is the monochrome scapder wordmark",
     pass:
-      indexHtml.includes('<span class="brand-name">scapder</span>') &&
-      indexHtml.includes('<h1 id="hero-title" data-i18n="heroTitle">scapder</h1>'),
+      /<a class="brand"[^>]*>\s*<img class="brand-logo" src="img\/logo\/scapder-wordmark-ink\.png"[^>]*alt="scapder"[^>]*width="\d+"[^>]*height="\d+"/s.test(indexHtml) &&
+      existsSync(resolve(root, "img/logo/scapder-wordmark-ink.png")),
   },
   {
     name: "contact form uses the API without private routing data",
