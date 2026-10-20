@@ -32,7 +32,7 @@
 - [x] T1 Bandada embed replaces Sentientum modal content (iframe facade, lang sync, teardown, remove YouTube/steps/facts code and unused i18n keys, update card copy, update verifier). Route: delegated writer (3+ non-trivial files).
 - [x] T2 SEO: meta/canonical/hreflang strategy, OG/Twitter, JSON-LD Organization, favicon, robots.txt, sitemap.xml, `html lang` + title/description follow language, image weight (webp + width/height + lazy), `defer`, workflow copy list. Route: delegated writer.
 - [x] T2b Header shows the scapder wordmark (user request 2026-10-20). Route: inline (1 asset + 2 small edits).
-- [ ] T3 Design review: critique against `system.md` (impeccable), agree fixes with user, apply. Route: TBD after critique.
+- [x] T3 Design review: critique against `system.md` (impeccable) scored 21/32 with 5 priority issues; user chose all 5, shortened consent (drop only the "provisional" sentence) and kept the hero. Fixes applied by one delegated writer (focus on dark surfaces, valid product-card markup with real CTAs, form font + consent trust + hit areas, system.md violations, 44px targets).
 
 ## Acceptance
 - Card opens a modal with Bandada embedded; language switch updates the iframe; Escape/close tears it down; focus trap works; no horizontal scroll at 375px.
@@ -53,5 +53,7 @@
 
 - 2026-10-20: T2b done inline. Asset img/logo/scapder-wordmark-ink.png built from logo_scapder.png (luminance alpha, ink #1a1c1c). RED: verifier failed "header brand is the monochrome scapder wordmark". GREEN: verifier 23 checks pass; Playwright: logo loads 75x28 at 1440, 65x24 at 375, scrollWidth 1440/375.
 
+- 2026-10-20: T3 done (delegated writer, strict TDD). RED: verifier failed 8 new checks. GREEN: `node tools/verify-landing.mjs` passes (31 checks); `node --check script.js` ok; Playwright (scratchpad t3/t3.mjs) ALL PASS at 1440x900 and 375x812: hero and Sentientum CTA outline white on #1c1b1b/#242424 (17.19 / 15.52:1), Edge CTA ink outline on its white card, modal close and fullscreen focus visible, Escape removes the iframe and focus returns to the CTA button, `.language-option` 56x44 (48x44 at 375, 13px), consent row >=44 with a 24px box, textarea Geist Mono, `.btn` hover/active transform none, EN/PT strings and no "provisional", scrollWidth <= viewport. Impeccable detector: 27 findings, same split as baseline. Decisions: heading shadow kept as `2px 2px 10px` (system.md allows heading shadow, prescribes none; only the 40px glow went); comparison handle is now 4px-radius (system.md: no pills) with no drop shadow; scroll reveal and hero panel entrance removed with their JS and `data-reveal` attributes. Commit: see `git log`.
+
 ## Next step
-T3 design review.
+Ask the user about push/PR (needs explicit OK).
