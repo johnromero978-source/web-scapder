@@ -55,5 +55,7 @@
 
 - 2026-10-20: T3 done (delegated writer, strict TDD). RED: verifier failed 8 new checks. GREEN: `node tools/verify-landing.mjs` passes (31 checks); `node --check script.js` ok; Playwright (scratchpad t3/t3.mjs) ALL PASS at 1440x900 and 375x812: hero and Sentientum CTA outline white on #1c1b1b/#242424 (17.19 / 15.52:1), Edge CTA ink outline on its white card, modal close and fullscreen focus visible, Escape removes the iframe and focus returns to the CTA button, `.language-option` 56x44 (48x44 at 375, 13px), consent row >=44 with a 24px box, textarea Geist Mono, `.btn` hover/active transform none, EN/PT strings and no "provisional", scrollWidth <= viewport. Impeccable detector: 27 findings, same split as baseline. Decisions: heading shadow kept as `2px 2px 10px` (system.md allows heading shadow, prescribes none; only the 40px glow went); comparison handle is now 4px-radius (system.md: no pills) with no drop shadow; scroll reveal and hero panel entrance removed with their JS and `data-reveal` attributes. Commit: see `git log`.
 
+- 2026-10-20: T3 follow-up inline: stacked product cards (<=1120px) lost the desktop row-alignment padding (empty gap under ML SPEC Kit) and the text touched the pillar list. Card heights 375: 404/430/310, 1440: 420x3; scrollWidth ok; verifier 31 pass.
+
 ## Next step
-Ask the user about push/PR (needs explicit OK).
+User decides on push/PR/deploy (source account via gits/ghs).
