@@ -558,32 +558,41 @@ const checks = [
   },
   {
     // M4: slow machines get the calm version. Detection starts in the head gate.
-    name: "M4 head gate adds html.motion-lite from hardwareConcurrency, deviceMemory or saveData",
+    // Brave randomises hardwareConcurrency, so core count must not decide; only very
+    // low memory or the data saver mark a device as slow up front.
+    name: "M4 head gate adds html.motion-lite only for deviceMemory <= 2 or saveData",
     pass: (() => {
       const head = indexHtml.slice(indexHtml.indexOf("<head>"), indexHtml.indexOf("</head>"));
       const inline = [...head.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]).join("\n");
       return (
         inline.includes("motion-lite") &&
-        /hardwareConcurrency\s*<=\s*4/.test(inline) &&
-        /deviceMemory\s*<=\s*4/.test(inline) &&
+        !inline.includes("hardwareConcurrency") &&
+        /deviceMemory\s*<=\s*2/.test(inline) &&
         inline.includes("saveData")
       );
     })(),
   },
   {
-    name: "M4 script.js samples idle frames once after load and adds motion-lite at runtime",
+    // No synthetic CPU benchmark (false positives on a busy fast machine); slowness is
+    // measured on the visitor's own scrolling and idle frames.
+    name: "M4 script.js adds motion-lite from real idle and scroll frames, without a CPU benchmark",
     pass: (() => {
-      const start = scriptJs.indexOf("function sampleFrameRate");
-      const end = start + scriptJs.slice(start).search(/\r?\n\}\r?\n/);
-      const body = scriptJs.slice(start, end);
+      const fnBody = (name) => {
+        const start = scriptJs.indexOf(`function ${name}`);
+        if (start < 0) return "";
+        return scriptJs.slice(start, start + scriptJs.slice(start).search(/\r?\n\}\r?\n/));
+      };
+      const idle = fnBody("sampleFrameRate");
+      const scroll = fnBody("watchScrollFrames");
       return (
-        start > -1 &&
-        body.includes("requestAnimationFrame") &&
-        body.includes('"motion-lite"') &&
-        body.includes("> 20") &&
-        body.includes("> 25") &&
-        body.includes("0.15") &&
-        scriptJs.includes("sampleFrameRate()")
+        !scriptJs.includes("300000") &&
+        idle.includes("requestAnimationFrame") &&
+        idle.includes('"motion-lite"') &&
+        scroll.includes('"scroll"') &&
+        scroll.includes("passive: true") &&
+        scroll.includes("0.25") &&
+        scroll.includes('"motion-lite"') &&
+        scriptJs.includes("watchScrollFrames()")
       );
     })(),
   },
