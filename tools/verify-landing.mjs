@@ -458,6 +458,22 @@ const checks = [
     })(),
   },
   {
+    name: "R5 hero photo has no CSS filter at rest (grayscale + contrast baked into robot-gaze-00.webp); the lens focus animates blur only and leaves no filter behind",
+    pass: (() => {
+      const css = read("styles.css").replace(/\/\*[\s\S]*?\*\//g, "");
+      const rules = css.match(/[^{}]*\.hero-robot\b[^{}]*\{[^}]*\}/g) || [];
+      const focus = (css.match(/@keyframes robot-focus\s*\{[\s\S]*?\}\s*\}/) || [""])[0];
+      const anim = (css.match(/html\.motion \.hero-robot\s*\{[^}]*\}/) || [""])[0];
+      return (
+        rules.length > 0 &&
+        rules.every((rule) => !/[\s;{]filter\s*:/.test(rule.slice(rule.indexOf("{")))) &&
+        focus.includes("blur(8px)") &&
+        !/grayscale|contrast/.test(focus) &&
+        /robot-focus[^;]*\bbackwards\b/.test(anim)
+      );
+    })(),
+  },
+  {
     name: "R4 renderer: seeks currentTime by nearest frame, one seek in flight, short frame-rate-independent ease, no canvas",
     pass: (() => {
       const start = scriptJs.indexOf("function turnHeroHead");
