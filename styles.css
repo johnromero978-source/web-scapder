@@ -1129,7 +1129,16 @@ h3 {
 	}
 
 	.product-card {
-		min-height: 320px;
+		min-height: 0;
+	}
+
+	/* Stacked cards have no row to align with. */
+	.product-card-static {
+		padding-bottom: 28px;
+	}
+
+	.product-card ul {
+		margin-top: 24px;
 	}
 
 	.contact-layout {
