@@ -204,7 +204,7 @@ const checks = [
       }),
   },
   {
-    // Weight is a ranking signal: no image the page asks for may exceed 300 KB.
+    // Weight is a ranking signal: no image the page asks for may exceed 300 KB (video clips have their own size checks).
     name: "no page image is heavier than 300 KB",
     pass: (() => {
       const urls = [
@@ -215,7 +215,7 @@ const checks = [
       ];
       return (
         urls.length > 0 &&
-        urls.every((u) => {
+        urls.filter((u) => !/\.mp4$/.test(u)).every((u) => {
           const file = resolve(root, decodeURIComponent(u));
           return existsSync(file) && statSync(file).size <= 300 * 1024;
         })
@@ -659,6 +659,75 @@ const checks = [
     pass: read("system.md").includes(
       "On low-end devices (`motion-lite`), process explanations and the head turn are skipped and states are shown instantly.",
     ),
+  },
+  {
+    name: "E1 Edge Sight demo: video + poster in the page, old AI stills gone from page, css, script and img/hero",
+    pass: (() => {
+      const css = read("styles.css");
+      return (
+        indexHtml.includes("img/edgesight/edgesight-site.mp4") &&
+        indexHtml.includes('poster="img/edgesight/edgesight-poster.webp"') &&
+        /<video[^>]*\smuted[^>]*\splaysinline|<video[^>]*\splaysinline[^>]*\smuted/.test(indexHtml) &&
+        [indexHtml, css, scriptJs].every((t) => !/imagen-filtro-calor|imagen-camara-1/.test(t)) &&
+        !existsSync(resolve(root, "img/hero/imagen-filtro-calor.webp")) &&
+        !existsSync(resolve(root, "img/hero/imagen-camara-1.webp")) &&
+        existsSync(resolve(root, "assets-src/hero/imagen-filtro-calor.webp")) &&
+        existsSync(resolve(root, "assets-src/hero/imagen-camara-1.webp"))
+      );
+    })(),
+  },
+  {
+    name: "E1 Edge Sight assets exist and the clip stays under 1.2 MB",
+    pass:
+      ["edgesight-site.mp4", "edgesight-poster.webp", "edgesight-tracks.json"].every((f) =>
+        existsSync(resolve(root, "img/edgesight", f)),
+      ) && statSync(resolve(root, "img/edgesight/edgesight-site.mp4")).size < 1.2 * 1024 * 1024,
+  },
+  {
+    name: "E1 demo script: loads the tracks JSON, syncs by requestVideoFrameCallback with an rAF fallback, builds the log from JSON events",
+    pass: (() => {
+      const start = scriptJs.indexOf("function initEdgeSightDemo");
+      const end = scriptJs.indexOf("// end Edge Sight demo");
+      const body = start >= 0 && end > start ? scriptJs.slice(start, end) : "";
+      return (
+        body.includes("img/edgesight/edgesight-tracks.json") &&
+        body.includes("requestVideoFrameCallback") &&
+        body.includes("requestAnimationFrame") &&
+        /tracks\.events/.test(body) &&
+        /Math\.round\([^)]*fps\)/.test(body)
+      );
+    })(),
+  },
+  {
+    name: "E1 demo script: autoplay is gated on motion-lite, reduced motion and saveData; loads near the viewport only",
+    pass: (() => {
+      const start = scriptJs.indexOf("function initEdgeSightDemo");
+      const end = scriptJs.indexOf("// end Edge Sight demo");
+      const body = start >= 0 && end > start ? scriptJs.slice(start, end) : "";
+      return (
+        /isLite\(\)/.test(body) &&
+        body.includes("prefers-reduced-motion: reduce") &&
+        body.includes("saveData") &&
+        /rootMargin:\s*"200px/.test(body) &&
+        body.includes("IntersectionObserver")
+      );
+    })(),
+  },
+  {
+    name: "E1 caption and demo strings exist in es, en and pt and never claim helmet/vest (PPE) detection",
+    pass: (() => {
+      const keys = ["edgeCaption", "edgeDesc", "edgeStageLabel", "edgeCountLabel", "edgePlay", "edgePause", "edgeLogScene", "edgeLogPeople", "edgeLogMachine", "edgeLabelPerson", "edgeLabelMachine"];
+      const dictionaries = ["es", "en", "pt"].map((lang) => {
+        const start = scriptJs.indexOf(`\t${lang}: {`);
+        return scriptJs.slice(start, scriptJs.indexOf("\n\t},", start));
+      });
+      const ppe = /\b(casco|cascos|helmets?|capacetes?|chalecos?|vests?|coletes?|ppe)\b/i;
+      return (
+        dictionaries.every((d) => keys.every((k) => d.includes(`${k}:`))) &&
+        dictionaries.every((d) => !ppe.test(d)) &&
+        !ppe.test(indexHtml.slice(indexHtml.indexOf('id="edgesight"'), indexHtml.indexOf('id="capability"')))
+      );
+    })(),
   },
   {
     name: "generic scroll reveal stays removed (no data-reveal)",
