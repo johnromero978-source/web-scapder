@@ -263,6 +263,73 @@ const checks = [
     name: "focus is visible on dark surfaces",
     pass: /\.section-inverse[^{]*:focus-visible|\.hero[^{]*:focus-visible/.test(read("styles.css")),
   },
+  {
+    // Motion is allowed only with a purpose, once, and never at the cost of
+    // reduced-motion users or the no-JS reader. The rule lives in system.md.
+    name: "system.md Motion allows purposeful one-time motion and keeps the bans",
+    pass: (() => {
+      const system = read("system.md");
+      const start = system.indexOf("### Motion");
+      const motion = system.slice(start, system.indexOf("\n## ", start)).toLowerCase();
+      return (
+        start > -1 &&
+        motion.includes("prefers-reduced-motion") &&
+        motion.includes("once") &&
+        motion.includes("without javascript") &&
+        ["parallax", "counter", "cursor", "particle", "looping"].every((word) => motion.includes(word))
+      );
+    })(),
+  },
+  {
+    // The gate must run before first paint (head, not end of body) and only
+    // opt in when the visitor has not asked for reduced motion.
+    name: "head carries the inline motion gate keyed on prefers-reduced-motion",
+    pass: (() => {
+      const head = indexHtml.slice(indexHtml.indexOf("<head>"), indexHtml.indexOf("</head>"));
+      const inline = [...head.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]).join("\n");
+      return (
+        inline.includes("prefers-reduced-motion: no-preference") &&
+        inline.includes("classList.add") &&
+        inline.includes("motion")
+      );
+    })(),
+  },
+  {
+    // Content must be visible by default. A zero-opacity rule is only legal as
+    // a keyframe start or behind html.motion (set by the head gate or by JS).
+    name: "styles only hide initial animation states behind html.motion",
+    pass: (() => {
+      const css = read("styles.css").replace(/\/\*[\s\S]*?\*\//g, "");
+      const blocks = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)];
+      const hides = blocks.filter(([, , body]) => /(?:^|[;\s])opacity:\s*0\s*(?:;|$)/.test(body));
+      return (
+        hides.length > 0 &&
+        hides.every(([, selector]) => /^\s*(?:from|0%)\s*$/.test(selector) || /html\.motion/.test(selector))
+      );
+    })(),
+  },
+  {
+    name: "script.js runs the Edge Sight slider demo once and cancels on user input",
+    pass:
+      scriptJs.includes("demonstrateComparison") &&
+      scriptJs.includes("requestAnimationFrame") &&
+      ["pointerdown", "keydown", "focus", "input"].every((type) => scriptJs.includes(`"${type}"`)) &&
+      scriptJs.includes("IntersectionObserver") &&
+      scriptJs.includes("prefers-reduced-motion"),
+  },
+  {
+    name: "case metrics appear via IntersectionObserver without rewriting their text",
+    pass: (() => {
+      const start = scriptJs.indexOf("function revealCaseMetrics");
+      const end = start + scriptJs.slice(start).search(/\r?\n\}\r?\n/);
+      const body = scriptJs.slice(start, end);
+      return start > -1 && body.includes("IntersectionObserver") && body.includes("unobserve") && !body.includes("textContent");
+    })(),
+  },
+  {
+    name: "generic scroll reveal stays removed (no data-reveal)",
+    pass: !indexHtml.includes("data-reveal") && !scriptJs.includes("data-reveal") && !read("styles.css").includes("data-reveal"),
+  },
 ];
 
 const failed = checks.filter((check) => !check.pass);

@@ -70,9 +70,15 @@ Scapder is a technical AI/data-intelligence company. The landing should feel pre
 - Depth strategy: tonal layering and 1px borders. No glass, blur haze, colored glows, or dramatic shadows.
 
 ### Motion
-- 150–250ms ease for hover/focus only.
-- Avoid bounce/spring/large transform effects.
-- Respect `prefers-reduced-motion`.
+- Hover/focus feedback: 150–250ms ease.
+- Motion beyond hover/focus is allowed only when it has a purpose, and each piece runs once per page load:
+  1. a one-time entrance on first load, opacity-led, ≤ ~900ms total;
+  2. a one-time interaction demonstration that teaches a control, cancelled by any user input;
+  3. a one-time appearance of proof data when it first enters the viewport.
+- Easing: ease-out curves (e.g. `cubic-bezier(0.2, 0.8, 0.2, 1)`). No bounce, spring, or overshoot. Transforms ≤ 8px.
+- `prefers-reduced-motion: reduce`: no motion at all; the final state is shown immediately.
+- Content must be visible without JavaScript. Animation states are applied by JS adding a class (`html.motion` from the head gate, or a state class from `script.js`), never by default CSS hiding.
+- Still banned: generic fade-in-on-scroll for every section, parallax, cursor-following, floating or tilting cards, particle backgrounds, counters that tick up, looping decorative motion.
 
 ## Layout Architecture
 Recommended marketing structure:
