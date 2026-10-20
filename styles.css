@@ -248,13 +248,15 @@ a {
 	color: var(--scapder-inverse-ink);
 }
 
+/* Grayscale + contrast(1.06) are baked into robot-gaze-00.webp, so the photo
+   needs no CSS filter (a filtered layer under the gaze video made scrolling
+   stall on GPU presents). */
 .hero-robot {
 	position: absolute;
 	inset: 0;
 	background-image: var(--robot-image);
 	background-size: cover;
 	background-position: 42% center;
-	filter: grayscale(1) contrast(1.06);
 	opacity: 0.82;
 }
 
@@ -1430,12 +1432,12 @@ h3 {
 
 @keyframes robot-focus {
 	from {
-		filter: grayscale(1) contrast(1.06) blur(8px);
+		filter: blur(8px);
 		transform: scale(1.03);
 	}
 
 	to {
-		filter: grayscale(1) contrast(1.06) blur(0);
+		filter: blur(0);
 		transform: none;
 	}
 }
@@ -1476,8 +1478,10 @@ html.motion .hero-panel {
 	animation-delay: 320ms;
 }
 
+/* backwards, not both: once focused, the photo keeps no filter or transform,
+   so nothing under the gaze video needs an extra GPU pass while scrolling. */
 html.motion .hero-robot {
-	animation: robot-focus 900ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+	animation: robot-focus 900ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
 }
 
 /* script.js arms a card only after it is sure it can reveal it. */
@@ -1708,9 +1712,10 @@ html.motion .section-indicator span.is-swapping {
 
 /* ── Hero robot head turn (system.md > Motion: the one pointer-following exception) ──
    script.js inserts this video right after .hero-robot (a sibling, so scrubbing
-   it never re-runs the photo's CSS filter) only for html.motion + a fine pointer,
-   once it can play through. It is never played, only seeked frame by frame. The
-   video has the photo's grayscale and contrast baked in, so it needs no filter.
+   it never repaints the photo) only for html.motion + a fine pointer, once it
+   can play through. It is never played, only seeked frame by frame. Like the
+   photo, the video has the grayscale and contrast baked in, so neither needs a
+   CSS filter.
    It covers the same box with the same opacity and object-position, and fades
    in over the photo; the photo is then dropped (.is-replaced), so the tone stays
    exactly the photo's. */
