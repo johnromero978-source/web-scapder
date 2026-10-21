@@ -801,7 +801,28 @@ const checks = [
         scriptJs.includes("drawSignalLine()") &&
         rules.length > 0 &&
         rules.some(([, , b]) => /transform-origin:\s*(50% 0|top|center top)/.test(b)) &&
-        rules.every(([, , b]) => !/transition:[^;]*\b(top|height)\b/.test(b) && !/animation:/.test(b))
+        rules.every(([, , b]) => !/transition:[^;]*\b(top|height)\b/.test(b) && (!/animation:/.test(b) || /animation-timeline:\s*scroll\(/.test(b)))
+      );
+    })(),
+  },
+  {
+    // Reading scrollY every frame forces a layout in Chromium (measured 2026-10-21:
+    // ~90% of the line's frame cost at CPU 4x). Where CSS scroll timelines exist the
+    // fill runs off the main thread and the taps flip from an IntersectionObserver.
+    name: "M5 signal line: CSS scroll timeline where supported, taps via IntersectionObserver, rAF fallback only otherwise",
+    pass: (() => {
+      const start = scriptJs.indexOf("function drawSignalLine");
+      const body = start < 0 ? "" : scriptJs.slice(start, start + scriptJs.slice(start).search(/\r?\n\}\r?\n/));
+      const css = read("styles.css").replace(/\/\*[\s\S]*?\*\//g, "");
+      const supports = (css.match(/@supports\s*\(animation-timeline:\s*scroll\(\)\)\s*\{[\s\S]*?\n\}/) || [""])[0];
+      return (
+        body.includes('CSS.supports("animation-timeline: scroll()")') &&
+        body.includes("new IntersectionObserver(") &&
+        body.includes("--fill-from") &&
+        body.includes("--fill-to") &&
+        /animation-timeline:\s*scroll\(root\)/.test(supports) &&
+        /animation-range:\s*var\(--fill-from\)\s+var\(--fill-to\)/.test(supports) &&
+        /@keyframes\s+signal-fill\s*\{[^}]*scaleY\(0\)[\s\S]*?scaleY\(1\)/.test(css)
       );
     })(),
   },

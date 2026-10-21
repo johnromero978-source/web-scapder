@@ -1294,9 +1294,13 @@ decodeHeadings();
 // fills with scroll position, its tip on the reading line (55% of the viewport).
 // It is cut into one segment per section so it takes that section's colour (ink
 // on light, paper on dark). Where it meets a section number, a short tap turns
-// ink as the tip passes and so does the number. Scroll-linked, transform only:
-// one passive scroll listener schedules one rAF, which writes scaleY and toggles
-// classes only when a value changed. Geometry is re-measured on resize.
+// ink as the tip passes and so does the number. Scroll-linked, transform only.
+// Reading scrollY every frame forces a layout in Chromium whenever something
+// else dirtied it (the decode, the Edge Sight clip), so where CSS scroll
+// timelines exist the fill is a scroll-driven scaleY animation (off the main
+// thread) and the taps flip from an IntersectionObserver whose root ends on the
+// reading line. Elsewhere one passive scroll listener schedules one rAF that
+// writes scaleY. Geometry is re-measured on resize.
 function drawSignalLine() {
 	if (!motionEnabled() || isLite() || !("requestAnimationFrame" in window)) {
 		return;
@@ -1325,6 +1329,10 @@ function drawSignalLine() {
 		return a > 0.5 && 0.2126 * r + 0.7152 * g + 0.0722 * b < 128;
 	};
 
+	const timeline = "CSS" in window && CSS.supports("animation-timeline: scroll()");
+	let reach = null;
+
+	// Fallback only: browsers without scroll timelines.
 	const update = () => {
 		frame = 0;
 
@@ -1343,16 +1351,33 @@ function drawSignalLine() {
 			segment.value = value;
 			segment.fill.style.transform = `scaleY(${value.toFixed(4)})`;
 		});
+	};
 
-		taps.forEach((tap) => {
-			const reached = tip >= tap.y;
-			if (reached === tap.reached) {
-				return;
-			}
-			tap.reached = reached;
-			tap.el.classList.toggle("is-reached", reached);
-			tap.label.classList.toggle("is-reached", reached);
-		});
+	// A tap is reached once it is above the reading line. The root band runs from
+	// far above the viewport down to that line, so "above" is "intersecting" and a
+	// jump that skips the visible part of the band still flips the state.
+	const watchTaps = () => {
+		if (reach) {
+			reach.disconnect();
+		}
+		reach = new IntersectionObserver(
+			(entries) => {
+				if (isLite()) {
+					reach.disconnect();
+					return;
+				}
+				entries.forEach((entry) => {
+					const tap = taps.find((candidate) => candidate.el === entry.target);
+					if (!tap) {
+						return;
+					}
+					tap.el.classList.toggle("is-reached", entry.isIntersecting);
+					tap.label.classList.toggle("is-reached", entry.isIntersecting);
+				});
+			},
+			{ rootMargin: `100000px 0px -${Math.round((1 - READ_LINE) * 100)}% 0px` },
+		);
+		taps.forEach((tap) => reach.observe(tap.el));
 	};
 
 	const build = () => {
@@ -1361,8 +1386,12 @@ function drawSignalLine() {
 		segments = [];
 		taps = [];
 		viewport = window.innerHeight;
+		line.classList.toggle("is-timeline", timeline);
 
 		if (!wide.matches) {
+			if (reach) {
+				reach.disconnect();
+			}
 			return;
 		}
 
@@ -1390,6 +1419,10 @@ function drawSignalLine() {
 			el.style.height = `${bottom - top}px`;
 			el.append(fill);
 			line.append(el);
+			// Scroll offsets at which the tip enters and leaves this segment.
+			const reading = viewport * READ_LINE;
+			el.style.setProperty("--fill-from", `${Math.round(top - reading)}px`);
+			el.style.setProperty("--fill-to", `${Math.round(bottom - reading)}px`);
 			segments.push({ fill, top, height: bottom - top, value: -1 });
 		});
 
@@ -1399,10 +1432,13 @@ function drawSignalLine() {
 			el.className = label.closest(".section-inverse") ? "signal-tap is-dark" : "signal-tap";
 			el.style.top = `${y}px`;
 			line.append(el);
-			taps.push({ el, label, y, reached: false });
+			taps.push({ el, label, y });
 		});
 
-		update();
+		watchTaps();
+		if (!timeline) {
+			update();
+		}
 	};
 
 	const onScroll = () => {
@@ -1425,7 +1461,9 @@ function drawSignalLine() {
 	new ResizeObserver(rebuild).observe(document.body);
 	wide.addEventListener("change", rebuild);
 	window.addEventListener("resize", rebuild, { passive: true });
-	window.addEventListener("scroll", onScroll, { passive: true });
+	if (!timeline) {
+		window.addEventListener("scroll", onScroll, { passive: true });
+	}
 }
 
 drawSignalLine();

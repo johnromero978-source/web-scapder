@@ -1946,6 +1946,25 @@ html.motion:not(.motion-lite) .is-decoding {
 	background: var(--scapder-inverse-ink);
 }
 
+/* Scroll-driven fill: each segment fills between the scroll offsets JS measured
+   (--fill-from / --fill-to), composited, with no per-frame script. */
+@keyframes signal-fill {
+	from {
+		transform: scaleY(0);
+	}
+	to {
+		transform: scaleY(1);
+	}
+}
+
+@supports (animation-timeline: scroll()) {
+	.signal-line.is-timeline .signal-fill {
+		animation: signal-fill linear both;
+		animation-timeline: scroll(root);
+		animation-range: var(--fill-from) var(--fill-to);
+	}
+}
+
 /* A tap where the line meets a section number; it turns ink once the signal
    reaches it, and so does the number. */
 .signal-tap {
