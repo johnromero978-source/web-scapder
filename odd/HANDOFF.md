@@ -1,25 +1,37 @@
-# Handoff — 2026-10-20 (branch `perf/motion-lite`, NOT merged, nothing new is live)
+# Handoff — 2026-10-21 (main `4c0f797`, everything is live)
 
-Live site (main `fc637b2`): Bandada, SEO, robot head-turn video scrub, scroll fix, mobile header order.
+Live on scapder.com. Nothing is waiting on a branch.
 
-## On this branch, unpublished
-| Commit | What | State |
+## Shipped 2026-10-21
+| PR | Merge | What |
 |---|---|---|
-| `cf6fa88` + `b159480` | Motion-lite: calm version for slow devices (deviceMemory <= 2 / Save-Data up front, or >= 25% slow frames during the visitor's first scroll). Hover borders made compositor-friendly. | Verified in headed Brave (normal machine stays full motion, CLS 0.007; phone/reduced/no-JS OK) |
-| `d83750b` | Edge Sight demo: AI-generated construction-site clip (Higgsfield/Kling) + REAL YOLOv8 detections drawn by the page, event log, slider, honest caption. Old stills moved to `assets-src/hero/`. | Verified; scroll through #edgesight borderline (2–3.6% frames > 20 ms vs 3% target) |
-| `ad1fb99` | M5 effects pass "La señal de los datos": decoding headings, scroll signal line, metric scan, Edge Sight reticle, hover fills. | **WIP** — see below |
-| (this commit) | `tools/dev/` measurement helpers + this handoff | — |
+| #7 | `291104a` | Motion-lite (calm version for slow devices), Edge Sight demo with real YOLOv8 detections, M5 effects "La señal de los datos" (heading decode, signal line on a CSS scroll timeline, metric scan, reticle, hover fills), opaque sticky header. |
+| #8 | `902fbeb` | Spanish copy refresh: neutral Spanish, tuteo, anglicisms and Title Case removed. |
+| #9 | `b78424f` | English and Brazilian Portuguese copy refresh; 5 hard-coded shared strings got translation keys. |
+| #10 | `4c0f797` | `/en/` and `/pt/` as real pages (generated in the Pages workflow), hreflang + canonicals, sitemap with alternates, the switch updates the URL. |
 
-## Pending before publishing (M5) — updated 2026-10-21
-1. ~~Accessible-name check~~ DONE: it was a test bug, the AX names are correct.
-2. ~~375 touch, lite, reduced, no-JS~~ DONE, all green. Scroll smoothness at normal CPU: target met (1-3%). Desktop CPU 4x: the signal line's forced layout (scrollY read per frame) was fixed 2026-10-21 in `f25d006` (CSS scroll timeline + IntersectionObserver); M5 is now ~3 points above base (17.8 vs 16.4% median, 10 pairs), accepted by the owner.
-3. ~~Impeccable detector~~ DONE 2026-10-21: 27 findings, identical to base.
-4. ~~Screenshots~~ reviewed 2026-10-21; header bleed (pre-existing) fixed with an opaque sticky header. Next: the user decides on push/PR/merge.
-Details and exact next steps: `odd/tasks/purposeful-motion.md` (M4, E1, M5 entries).
+Details per feature: `odd/tasks/purposeful-motion.md`, `es-copy-refresh.md`, `en-pt-copy-refresh.md`, `language-urls.md`.
+
+## Pending
+Owner / client:
+1. `docs/Scapder_Overview.pdf` is needed to validate claims. `docs/` is gitignored, so the PDF must be shared another way. Waiting on it: Legis "mínimo operativo documentado" next to the 5% tile; Panama Canal "consumo en tránsito" (ES/PT) vs "fuel consumption" (EN); Edge Sight log "en movimiento"; the case figures listed as unverifiable in the copy reviews.
+2. Google Search Console (on hold): use a company Google account; prefer a Domain property (DNS TXT record). Open question: who has DNS access for scapder.com.
+3. Legal check of the contact consent wording.
+
+Decisions not taken yet:
+4. Number format per language in the metric tiles (`20,000+` reads as a decimal in ES/PT); needs translation keys for those numbers.
+5. An H1 that says what scapder does (today it is only "scapder").
+6. Dedicated pages for Edge Sight AI, Sentientum and the cases (need PDF content).
+
+Housekeeping:
+7. Unused dictionary key `contactEmailLabel`.
+
+Accepted, not pending: M5 costs ~3 points more slow frames than before at desktop CPU 4x (17.8 vs 16.4% median); motion-lite takes over on those machines.
 
 ## How to test locally
-`node tools/dev/serve-range.mjs` then open http://localhost:8766 (Range support is required for the videos).
-Verifier: `node tools/verify-landing.mjs` (77 checks, green).
+1. `node tools/build-language-pages.mjs .` (writes the gitignored `en/` and `pt/`)
+2. `node tools/dev/serve-range.mjs`, then open http://localhost:8766, `/en/` or `/pt/` (Range support is required for the videos).
+3. Verifier: `node tools/verify-landing.mjs` (103 checks, green). Browser helpers: `tools/dev/` (needs `playwright-core` in a scratch folder; see its README).
 
 ## Accounts / rules
-Push/PR with the `johnromero978-source` account (`~/.gh-personal/bin/gits` / `ghs`), never switch the global gh (johnromero-613). Higgsfield credits used today on this branch: ~18 (Edge Sight).
+Push/PR with the `johnromero978-source` account (`~/.gh-personal/bin/gits` / `ghs`), never switch the global gh (johnromero-613). Merging to main deploys to scapder.com through Pages.
