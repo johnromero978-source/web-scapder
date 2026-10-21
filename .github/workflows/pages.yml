@@ -29,6 +29,9 @@ jobs:
         with:
           node-version: 24
 
+      - name: Verify landing
+        run: node tools/verify-landing.mjs
+
       - name: Prepare public artifact
         run: |
           mkdir public

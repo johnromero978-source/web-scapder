@@ -1231,6 +1231,19 @@ const checks = [
     })(),
   },
   {
+    // A failing verifier must stop the deploy, so it runs before anything is uploaded.
+    name: "Pages workflow runs this verifier before uploading the artifact",
+    pass: (() => {
+      const workflow = read(".github/workflows/pages.yml");
+      const verify = workflow.indexOf("node tools/verify-landing.mjs");
+      return (
+        verify > workflow.indexOf("setup-node") &&
+        verify < workflow.indexOf("Prepare public artifact") &&
+        verify < workflow.indexOf("upload-pages-artifact")
+      );
+    })(),
+  },
+  {
     name: "generated language folders are gitignored and the dev README explains the local build",
     pass:
       /^\/en\/$/m.test(read(".gitignore")) &&
