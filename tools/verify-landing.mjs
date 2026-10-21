@@ -11,6 +11,12 @@ const workerJs = read("contact-worker/src/worker.mjs");
 const endpoint = /<meta name="scapder-contact-endpoint" content="([^"]*)"/.exec(indexHtml)?.[1].trim();
 const contactActivationRequired = process.env.SCAPDER_REQUIRE_CONTACT_ENDPOINT === "1";
 
+const loadDictionary = (lang) => {
+  const start = scriptJs.indexOf(`\t${lang}: {`);
+  const open = scriptJs.indexOf("{", start);
+  return new Function("return (" + scriptJs.slice(open, scriptJs.indexOf("\n\t},", start) + 3) + ")")();
+};
+
 const checks = [
   {
     name: "hero tagline stays English in Spanish UI",
@@ -966,6 +972,111 @@ const checks = [
       /del 76% |desde 76% /.test(scriptJs) &&
       scriptJs.includes("5 perfiles reales") &&
       scriptJs.includes("seis mil clientes"),
+  },
+  {
+    name: "English dictionary has no Spanish calques, Title Case labels or symbols in running text",
+    pass: (() => {
+      const en = Object.values(loadDictionary("en")).join("\n");
+      const banned = [
+        /under 300/, /Real Time/, /Data Sovereignty/, /Synthetic Audiences/, /AI Governance/, /Agents \+ humans/,
+        /overview cases/, /relying on programming/, /blind dependency/, /processed records/, /analyzed variables/,
+        /identified profiles/, /Contextual Machine Learning/, /Product & Business/, /scapder Team/, /six thousand/,
+        /Automatic governance/, /Open full screen/, /See Edge Sight AI/, /will respond soon/, /Support the team until/,
+        /reach operations/, /detection version/, /drives into/, /Open the LinkedIn profile of/,
+      ];
+      const bad = banned.filter((re) => re.test(en)).map(String);
+      if (bad.length) console.error("en leftovers: " + bad.join(" "));
+      return bad.length === 0;
+    })(),
+  },
+  {
+    name: "Portuguese dictionary has no Spanish words, calques or inconsistent scapder article",
+    pass: (() => {
+      const pt = Object.values(loadDictionary("pt")).join("\n");
+      const banned = [
+        /5 pasos/, /sob 300/, /Ver o bando/, /\bEmail\b/, /overview/, /prospects/, /Machine Learning/, /desenhados/,
+        /Lab para/, /Agentes \+ humanos/, /Audiências Sintéticas/, /Assessora/, /sem tirar os dados/, /chegar à operação/,
+        /depender de programação/, /Consultas de privacidade/, /Abrir navegação/, /Rodapé"/,
+        /dependência cega/, /infraestruturas físicas/, /20,000\+/, /obra de construção/, /^scapder (processou|converteu)/m,
+      ];
+      const bad = banned.filter((re) => re.test(pt)).map(String);
+      if (bad.length) console.error("pt leftovers: " + bad.join(" "));
+      return bad.length === 0;
+    })(),
+  },
+  {
+    name: "owner decisions hold in en and pt copy",
+    pass: (() => {
+      const en = loadDictionary("en");
+      const pt = loadDictionary("pt");
+      return (
+        pt.teamMember02Role === "Assessoria jurídica e Recursos Humanos" &&
+        pt.sentientumDemoCta === "Ver a bandada" &&
+        pt.contactFormEmail === "E-mail" &&
+        pt.casePuppisM2 === "clientes por mês" &&
+        pt.proofThree === "varejo" &&
+        pt.casePuppisDomain === "Varejo pet" &&
+        pt.caseCeleusCopy.startsWith("A scapder ") &&
+        pt.caseCeleusCopy.includes("mais de 20 mil") &&
+        pt.edgeDesc.includes("caixas de detecção") &&
+        en.heroSystem === "Your Data has a Voice" &&
+        pt.heroSystem === "Your Data has a Voice" &&
+        en.caseCanalM3 === "fuel consumption in transit" &&
+        /\b(minimum|mínimo)\b/.test(en.caseLegisCopy + pt.caseLegisCopy) &&
+        !/\b(don't|can't|won't|isn't|aren't|doesn't|couldn't|we'll|we're|it's|you're|that's)\b/i.test(Object.values(en).join("\n")) &&
+        !/\b(colour|behaviour|organis|analyse|centre)/i.test(Object.values(en).join("\n"))
+      );
+    })(),
+  },
+  {
+    name: "formerly hard-coded shared strings use i18n keys and every language has them",
+    pass: (() => {
+      const wants = [
+        ["data-i18n-aria-label", "navMainAria", /<header class="site-header"[^>]*data-i18n-aria-label="navMainAria"/],
+        ["data-i18n-aria-label", "brandAria", /<a class="brand"[^>]*data-i18n-aria-label="brandAria"/],
+        ["data-i18n-aria-label", "proofAria", /<section class="proof-strip"[^>]*data-i18n-aria-label="proofAria"/],
+        ["data-i18n", "edgeCategory", /<p class="product-category"[^>]*data-i18n="edgeCategory"/],
+        ["data-i18n", "edgePillarOne", /<li[^>]*data-i18n="edgePillarOne"/],
+      ];
+      const dicts = ["es", "en", "pt"].map(loadDictionary);
+      const bad = [];
+      for (const [, key, re] of wants) {
+        if (!re.test(indexHtml)) bad.push("html:" + key);
+        for (const d of dicts) if (typeof d[key] !== "string" || !d[key].trim()) bad.push("dict:" + key);
+      }
+      const [es, en, pt] = dicts;
+      if (en.edgePillarOne !== "On-premises" || pt.edgePillarOne !== "On-premise" || es.edgePillarOne !== "On-Premise") bad.push("on-premise values");
+      if (en.edgeCategory !== "Computer vision · Edge AI" || pt.edgeCategory !== "Visão computacional · Edge AI" || es.edgeCategory !== "Computer Vision · Edge AI") bad.push("category values");
+      if (bad.length) console.error("shared strings: " + bad.join(", "));
+      return bad.length === 0;
+    })(),
+  },
+  {
+    name: "every aria-label in the markup is translated through a key",
+    pass: (() => {
+      const bad = [];
+      for (const m of indexHtml.matchAll(/<[^>]*\baria-label="[^"]*"[^>]*>/g)) {
+        if (!/data-i18n-aria-label=/.test(m[0])) bad.push(m[0].slice(0, 60));
+      }
+      if (bad.length) console.error("untranslated aria-label: " + bad.join(" | "));
+      return bad.length === 0;
+    })(),
+  },
+  {
+    name: "Spanish dictionary values for pre-existing keys are the Spanish refresh text",
+    pass: (() => {
+      const es = loadDictionary("es");
+      const expected = {
+        navToggleLabel: "Abrir menú de navegación",
+        casesTitle: "Casos documentados con datos reales.",
+        sentientumDemoCta: "Ver la bandada",
+        contactFormHelp: "Tu solicitud llegará al equipo de scapder.",
+        mlspecPillarThree: "Agentes y humanos",
+      };
+      const bad = Object.entries(expected).filter(([k, v]) => es[k] !== v).map(([k]) => k);
+      if (bad.length) console.error("es changed: " + bad.join(", "));
+      return bad.length === 0 && es.navMainAria === "Navegación principal" && es.brandAria === "scapder inicio" && es.proofAria === "Experiencia aplicada";
+    })(),
   },
 ];
 
