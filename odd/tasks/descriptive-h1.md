@@ -24,7 +24,7 @@ The H1 is only "scapder". Search engines and screen readers get no description f
 
 ## Tasks
 - [x] D1 Markup, dictionary key in 3 languages, styles, verifier checks (RED first), generated EN/PT pages carry the descriptor. Route: delegated writer (index.html, script.js, styles.css, verifier).
-- [ ] D2 Browser check: `/`, `/en/`, `/pt/` at 375, 768, 1440: descriptor visible and in the right language, wordmark unchanged, no horizontal scroll, hero entrance animation still runs, contrast over the hero image. Route: parent (inline).
+- [x] D2 Browser check: `/`, `/en/`, `/pt/` at 375, 768, 1440: descriptor visible and in the right language, wordmark unchanged, no horizontal scroll, hero entrance animation still runs, contrast over the hero image. Route: parent (inline).
 
 ## Acceptance
 - H1 text in each language is "scapder" + the descriptor, before JS and after switching.
@@ -37,3 +37,5 @@ The H1 is only "scapder". Search engines and screen readers get no description f
 ## Progress
 - 2026-10-21: branch `feat/descriptive-h1` from main `dc04f76`.
 - 2026-10-21: D1 done (writer). RED: failing checks were "lowercase scapder branding in visible core copy" and "hero H1 carries a descriptor in es, en and pt (index, generated pages, styles)". GREEN: node tools/verify-landing.mjs passed (104 checks); node --check script.js ok; build-language-pages output has the EN/PT descriptor inside the h1. Commit pending (parent).
+- 2026-10-21 D1 committed `b9004d8`.
+- 2026-10-21 D2 (parent, inline). Headless Brave on the local build (scratchpad d2.mjs) at 375, 768, 1440 on `/`, `/en/`, `/pt/`: h1 text is "scapder " + the right descriptor, no horizontal scroll, h1 settled (opacity 1) with the `hero-enter` animation. Wordmark 56/76.8/140px, descriptor 20/20/34px. Screenshots showed a lone "reales" on a third line at 1440, so `max-width` went from 22ch to 26ch with `text-wrap: balance`: now two even lines at 375 and 1440. White text with a shadow over the hero image reads like the lead paragraph below it.
