@@ -1,4 +1,6 @@
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -17,6 +19,34 @@ const loadDictionary = (lang) => {
   return new Function("return (" + scriptJs.slice(open, scriptJs.indexOf("\n\t},", start) + 3) + ")")();
 };
 
+const escText = (v) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const escAttr = (v) => escText(v).replace(/"/g, "&quot;");
+const expectedHreflang = [
+  '<link rel="alternate" hreflang="es" href="https://scapder.com/" />',
+  '<link rel="alternate" hreflang="en" href="https://scapder.com/en/" />',
+  '<link rel="alternate" hreflang="pt-BR" href="https://scapder.com/pt/" />',
+  '<link rel="alternate" hreflang="x-default" href="https://scapder.com/" />',
+].join("\n");
+const hreflangBlock = (html) =>
+  [...html.matchAll(/<link rel="alternate" hreflang="[^"]+" href="[^"]+" \/>/g)].map((m) => m[0]).join("\n");
+
+// Build the language pages into a scratch folder once; the checks below read them.
+const generated = (() => {
+  const dir = mkdtempSync(resolve(tmpdir(), "scapder-lang-"));
+  try {
+    execFileSync(process.execPath, [resolve(root, "tools/build-language-pages.mjs"), dir], { stdio: "pipe" });
+    const pages = {};
+    for (const lang of ["en", "pt"]) {
+      const file = resolve(dir, lang, "index.html");
+      pages[lang] = existsSync(file) ? readFileSync(file, "utf8") : "";
+    }
+    return { dir, pages, keyCount: new Set(indexHtml.match(/data-i18n(?:-html|-alt|-aria-label)?="[^"]+"/g)).size };
+  } catch (error) {
+    console.error("language page build failed: " + String(error.stderr || error.message).split("\n")[0]);
+    return { dir, pages: {}, keyCount: 0 };
+  }
+})();
+
 const checks = [
   {
     name: "hero tagline stays English in Spanish UI",
@@ -29,7 +59,7 @@ const checks = [
   {
     name: "header brand is the monochrome scapder wordmark",
     pass:
-      /<a class="brand"[^>]*>\s*<img class="brand-logo" src="img\/logo\/scapder-wordmark-ink\.png"[^>]*alt="scapder"[^>]*width="\d+"[^>]*height="\d+"/s.test(indexHtml) &&
+      /<a class="brand"[^>]*>\s*<img class="brand-logo" src="\/img\/logo\/scapder-wordmark-ink\.png"[^>]*alt="scapder"[^>]*width="\d+"[^>]*height="\d+"/s.test(indexHtml) &&
       existsSync(resolve(root, "img/logo/scapder-wordmark-ink.png")),
   },
   {
@@ -179,7 +209,7 @@ const checks = [
   {
     name: "favicon set is linked and exists",
     pass:
-      /<link rel="icon"[^>]*href="favicon\.ico"/.test(indexHtml) &&
+      /<link rel="icon"[^>]*href="\/favicon\.ico"/.test(indexHtml) &&
       indexHtml.includes('rel="apple-touch-icon"') &&
       ["favicon.ico", "favicon-32.png", "apple-touch-icon.png"].every((f) => existsSync(resolve(root, f))),
   },
@@ -222,7 +252,7 @@ const checks = [
       return (
         urls.length > 0 &&
         urls.filter((u) => !/\.mp4$/.test(u)).every((u) => {
-          const file = resolve(root, decodeURIComponent(u));
+          const file = resolve(root, decodeURIComponent(u).replace(/^\//, ""));
           return existsSync(file) && statSync(file).size <= 300 * 1024;
         })
       );
@@ -426,7 +456,7 @@ const checks = [
     name: "R2 hero background and preload use robot-gaze-00.webp (<250 KB, exists)",
     pass:
       read("styles.css").includes('url("img/hero/robot-gaze-00.webp")') &&
-      indexHtml.includes('rel="preload" as="image" href="img/hero/robot-gaze-00.webp"') &&
+      indexHtml.includes('rel="preload" as="image" href="/img/hero/robot-gaze-00.webp"') &&
       existsSync(resolve(root, "img/hero/robot-gaze-00.webp")) &&
       statSync(resolve(root, "img/hero/robot-gaze-00.webp")).size < 250 * 1024,
   },
@@ -671,8 +701,8 @@ const checks = [
     pass: (() => {
       const css = read("styles.css");
       return (
-        indexHtml.includes("img/edgesight/edgesight-site.mp4") &&
-        indexHtml.includes('poster="img/edgesight/edgesight-poster.webp"') &&
+        indexHtml.includes("/img/edgesight/edgesight-site.mp4") &&
+        indexHtml.includes('poster="/img/edgesight/edgesight-poster.webp"') &&
         /<video[^>]*\smuted[^>]*\splaysinline|<video[^>]*\splaysinline[^>]*\smuted/.test(indexHtml) &&
         [indexHtml, css, scriptJs].every((t) => !/imagen-filtro-calor|imagen-camara-1/.test(t)) &&
         !existsSync(resolve(root, "img/hero/imagen-filtro-calor.webp")) &&
@@ -1078,7 +1108,164 @@ const checks = [
       return bad.length === 0 && es.navMainAria === "Navegación principal" && es.brandAria === "scapder inicio" && es.proofAria === "Experiencia aplicada";
     })(),
   },
+  // ── Language URLs: /, /en/, /pt/ ──
+  {
+    name: "index.html declares hreflang es, en, pt-BR and x-default, with a self canonical",
+    pass:
+      indexHtml.includes('<link rel="canonical" href="https://scapder.com/" />') &&
+      hreflangBlock(indexHtml) === expectedHreflang,
+  },
+  {
+    name: "index.html asset URLs are root-absolute so /en/ and /pt/ copies work",
+    pass: !/\s(?:src|poster)="(?:img\/|script\.js|styles\.css)/.test(indexHtml) &&
+      !/\shref="(?:img\/|styles\.css|favicon|apple-touch-icon)/.test(indexHtml) &&
+      indexHtml.includes('href="/styles.css"') &&
+      indexHtml.includes('src="/script.js"') &&
+      indexHtml.includes('href="/img/hero/robot-gaze-00.webp"'),
+  },
+  {
+    name: "script.js uses root-absolute asset paths and no relative img/ URLs",
+    pass:
+      !/["'`]img\//.test(scriptJs) &&
+      scriptJs.includes('"/img/hero/gaze.mp4"') &&
+      scriptJs.includes('"/img/edgesight/edgesight-tracks.json"'),
+  },
+  {
+    name: "script.js lets /en/ and /pt/ decide the language and keeps the address in step",
+    pass:
+      scriptJs.includes("pathLanguage") &&
+      scriptJs.includes("history.replaceState") &&
+      scriptJs.includes("location.search") &&
+      scriptJs.includes("location.hash") &&
+      scriptJs.includes('"file:"'),
+  },
+  {
+    name: "sitemap lists /, /en/ and /pt/ with xhtml alternates",
+    pass: (() => {
+      const sitemap = read("sitemap.xml");
+      const urls = [...sitemap.matchAll(/<loc>([^<]*)<\/loc>/g)].map((m) => m[1]);
+      const alternates = (sitemap.match(/<xhtml:link rel="alternate" hreflang="[^"]+" href="[^"]+"\s*\/>/g) || []).length;
+      return (
+        sitemap.includes('xmlns:xhtml="http://www.w3.org/1999/xhtml"') &&
+        JSON.stringify(urls) === JSON.stringify(["https://scapder.com/", "https://scapder.com/en/", "https://scapder.com/pt/"]) &&
+        alternates === 12 &&
+        ["es", "en", "pt-BR", "x-default"].every((l) => sitemap.split(`hreflang="${l}"`).length === 4)
+      );
+    })(),
+  },
+  {
+    name: "Pages workflow builds the language pages into public/ and pins Node",
+    pass: (() => {
+      const workflow = read(".github/workflows/pages.yml");
+      return (
+        workflow.includes("node tools/build-language-pages.mjs public") &&
+        workflow.includes("actions/setup-node") &&
+        workflow.indexOf("setup-node") < workflow.indexOf("build-language-pages")
+      );
+    })(),
+  },
+  {
+    name: "generated language folders are gitignored and the dev README explains the local build",
+    pass:
+      /^\/en\/$/m.test(read(".gitignore")) &&
+      /^\/pt\/$/m.test(read(".gitignore")) &&
+      read("tools/dev/README.md").includes("node tools/build-language-pages.mjs ."),
+  },
+  ...["en", "pt"].flatMap((lang) => {
+    const expectLang = lang === "pt" ? "pt-BR" : "en";
+    const url = `https://scapder.com/${lang}/`;
+    const locale = lang === "pt" ? "pt_BR" : "en_US";
+    const page = () => generated.pages?.[lang] ?? "";
+    const dict = () => loadDictionary(lang);
+    return [
+      {
+        name: `generator writes ${lang}/index.html with html lang, title and meta description from the dictionary`,
+        pass: (() => {
+          const html = page();
+          const d = dict();
+          return (
+            html.startsWith("<!doctype html>") &&
+            html.includes(`<html lang="${expectLang}">`) &&
+            html.includes(`<title>${escText(d.metaTitle)}</title>`) &&
+            html.includes(`content="${escAttr(d.metaDescription)}"`) &&
+            !html.includes("inteligencia accionable")
+          );
+        })(),
+      },
+      {
+        name: `${lang} page canonical, OG and Twitter metadata point at ${url}`,
+        pass: (() => {
+          const html = page();
+          const d = dict();
+          return (
+            html.includes(`<link rel="canonical" href="${url}" />`) &&
+            html.includes(`<meta property="og:url" content="${url}" />`) &&
+            html.includes(`<meta property="og:locale" content="${locale}" />`) &&
+            html.includes(`<meta property="og:title" content="${escAttr(d.metaTitle)}" />`) &&
+            html.includes(`<meta name="twitter:title" content="${escAttr(d.metaTitle)}" />`) &&
+            html.includes(`<meta property="og:description" content="${escAttr(d.metaDescription)}" />`) &&
+            html.includes(`<meta name="twitter:description" content="${escAttr(d.metaDescription)}" />`) &&
+            html.includes(`"description": ${JSON.stringify(d.metaDescription)}`) &&
+            (html.match(/property="og:locale:alternate"/g) || []).length === 2 &&
+            !html.includes('href="https://scapder.com/" />\n    <link rel="icon"')
+          );
+        })(),
+      },
+      {
+        name: `${lang} page keeps the same hreflang block as the Spanish page`,
+        pass: hreflangBlock(page()) === expectedHreflang,
+      },
+      {
+        name: `${lang} page has every data-i18n text, html and attribute value from the dictionary, none left in Spanish`,
+        pass: (() => {
+          const html = page();
+          const d = dict();
+          const es = loadDictionary("es");
+          const bad = [];
+          for (const m of indexHtml.matchAll(/data-(i18n|i18n-html|i18n-aria-label|i18n-alt)="([^"]+)"/g)) {
+            const [, kind, key] = m;
+            if (!d[key]) continue;
+            const needle =
+              kind === "i18n"
+                ? `data-i18n="${key}"`
+                : kind === "i18n-html"
+                  ? `data-i18n-html="${key}"`
+                  : kind === "i18n-aria-label"
+                    ? `aria-label="${escAttr(d[key])}"`
+                    : `alt="${escAttr(d[key])}"`;
+            if (!html.includes(needle)) bad.push(`${kind}:${key} attr`);
+            if (kind === "i18n" || kind === "i18n-html") {
+              const value = kind === "i18n" ? escText(d[key]) : d[key];
+              const re = new RegExp(`data-i18n${kind === "i18n" ? "" : "-html"}="${key}"[^>]*>${value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}<`);
+              if (!re.test(html)) bad.push(`${kind}:${key} content`);
+              if (es[key] && es[key] !== d[key] && kind === "i18n" && html.includes(`>${escText(es[key])}<`)) bad.push(`${kind}:${key} still Spanish`);
+            }
+          }
+          if (bad.length) console.error("untranslated in " + lang + ": " + bad.slice(0, 8).join(", "));
+          return bad.length === 0 && generated.keyCount > 100;
+        })(),
+      },
+      {
+        name: `${lang} page marks its own selector button active and keeps anchors and assets relative-safe`,
+        pass: (() => {
+          const html = page();
+          const button = (l) => new RegExp(`<button[^>]*data-lang="${l}"[^>]*>`).exec(html)?.[0] ?? "";
+          return (
+            /is-active/.test(button(lang)) &&
+            button(lang).includes('aria-pressed="true"') &&
+            !/is-active/.test(button("es")) &&
+            button("es").includes('aria-pressed="false"') &&
+            html.includes('href="#cases"') &&
+            !/\s(?:src|poster)="img\//.test(html) &&
+            html.includes(`href="https://bandada.scapder.com/?lang=${lang}"`)
+          );
+        })(),
+      },
+    ];
+  }),
 ];
+
+rmSync(generated.dir ?? "", { recursive: true, force: true });
 
 const failed = checks.filter((check) => !check.pass);
 

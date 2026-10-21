@@ -1,7 +1,7 @@
 import http from "node:http"; import fs from "node:fs"; import path from "node:path";
 const root = path.resolve(new URL("../..", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"));
 const types = {".html":"text/html",".js":"text/javascript",".css":"text/css",".png":"image/png",".jpg":"image/jpeg",".webp":"image/webp",".mp4":"video/mp4",".ico":"image/x-icon",".xml":"application/xml",".txt":"text/plain"};
-http.createServer((req,res)=>{let u=decodeURIComponent(req.url.split("?")[0]); if(u==="/")u="/index.html"; const f=path.resolve(path.join(root,u));
+http.createServer((req,res)=>{let u=decodeURIComponent(req.url.split("?")[0]); if(u.endsWith("/"))u+="index.html"; const f=path.resolve(path.join(root,u));
  if(!f.startsWith(root)||!fs.existsSync(f)||fs.statSync(f).isDirectory()){res.statusCode=404;return res.end();}
  const size=fs.statSync(f).size; res.setHeader("content-type",types[path.extname(f)]||"application/octet-stream"); res.setHeader("cache-control","no-store"); res.setHeader("accept-ranges","bytes");
  const m=/bytes=(\d*)-(\d*)/.exec(req.headers.range||"");
