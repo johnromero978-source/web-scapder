@@ -912,6 +912,18 @@ const checks = [
     name: "generic scroll reveal stays removed (no data-reveal)",
     pass: !indexHtml.includes("data-reveal") && !scriptJs.includes("data-reveal") && !read("styles.css").includes("data-reveal"),
   },
+  {
+    // A see-through sticky header lets the proof strip's text show behind the logo.
+    name: "sticky header background is opaque (no transparency, no blur)",
+    pass: (() => {
+      const css = read("styles.css").replace(/\/\*[\s\S]*?\*\//g, "");
+      const rules = [...css.matchAll(/(?:^|\})\s*\.site-header\s*\{([^{}]*)\}/g)].map(([, body]) => body);
+      return (
+        rules.some((body) => /background:\s*var\(--scapder-canvas\)\s*;/.test(body)) &&
+        rules.every((body) => !/transparent|rgba\(|backdrop-filter/.test(body))
+      );
+    })(),
+  },
 ];
 
 const failed = checks.filter((check) => !check.pass);

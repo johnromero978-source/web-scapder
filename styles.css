@@ -99,7 +99,7 @@ a {
 	position: sticky;
 	top: 0;
 	z-index: 100;
-	background: color-mix(in srgb, var(--scapder-canvas) 94%, transparent);
+	background: var(--scapder-canvas);
 	border-bottom: 1px solid var(--scapder-border);
 }
 
