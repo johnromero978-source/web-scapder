@@ -12,7 +12,7 @@ Live site (main `fc637b2`): Bandada, SEO, robot head-turn video scrub, scroll fi
 
 ## Pending before publishing (M5) — updated 2026-10-21
 1. ~~Accessible-name check~~ DONE: it was a test bug, the AX names are correct.
-2. ~~375 touch, lite, reduced, no-JS~~ DONE, all green. Scroll smoothness at normal CPU: target met (1-3%). **Still open:** desktop CPU 4x is inconclusive (base 11-14% vs M5 9-21%); re-measure with more runs.
+2. ~~375 touch, lite, reduced, no-JS~~ DONE, all green. Scroll smoothness at normal CPU: target met (1-3%). **Still open:** desktop CPU 4x. The signal line's forced layout (scrollY read per frame) was found and fixed 2026-10-21 (CSS scroll timeline + IntersectionObserver, uncommitted); the remaining gap is render cost and the host was too loaded to measure it cleanly. Re-run on an idle machine.
 3. Not yet run: impeccable detector (baseline 27).
 4. Review screenshots/visual quality; then the user decides on push/PR/merge.
 Details and exact next steps: `odd/tasks/purposeful-motion.md` (M4, E1, M5 entries).
