@@ -924,6 +924,49 @@ const checks = [
       );
     })(),
   },
+  {
+    // Spanish copy refresh: no unnecessary anglicisms, English Title Case or calques.
+    name: "Spanish copy has none of the removed anglicisms, Title Case forms or calques",
+    pass: (() => {
+      const esStart = scriptJs.indexOf("\tes: {");
+      const esDict = scriptJs.slice(esStart, scriptJs.indexOf("\n\t},", esStart));
+      const banned = [
+        /overview/i, /retail/i, /Machine Learning/, /Tiempo Real/, /Soberanía de Datos/,
+        /Audiencias Sintéticas/, /co-creación/i, /co-creamos/i, /AI Agents/,
+        /Intenta de nuevo/, /bajo 300/, /prospectos/, /Legal Advisor/, /Product &(?:amp;)? Business/,
+        /Lab a producción/, /Agentes \+ humanos/, /se vuelva/, /llegar a operación/,
+        /sin sacar/, /Enviaremos tu/, /sin crear dependencia/, /cajas/, /infraestructuras de video/,
+        /aria-label="Footer"/, /footerAria: "Footer"/, /contactFormEmail: "Email"/, /data-i18n="contactFormEmail">Email</,
+      ];
+      return banned.every((re) => !re.test(esDict) && !re.test(indexHtml));
+    })(),
+  },
+  {
+    name: "Spanish HTML default text equals the es dictionary for every plain data-i18n element",
+    pass: (() => {
+      const esStart = scriptJs.indexOf("\tes: {");
+      const open = scriptJs.indexOf("{", esStart);
+      const es = new Function("return (" + scriptJs.slice(open, scriptJs.indexOf("\n\t},", esStart) + 3) + ")")();
+      const norm = (t) => t.replace(/<[^>]*>/g, "").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim();
+      const bad = [];
+      for (const m of indexHtml.matchAll(/<(\w+)\b[^>]*\bdata-i18n="([^"]+)"[^>]*>([\s\S]*?)<\/\1>/g)) {
+        const [, , key, inner] = m;
+        if (/<\w/.test(inner) || !(key in es)) continue;
+        if (norm(inner) !== norm(es[key])) bad.push(key);
+      }
+      if (bad.length) console.error("html/es mismatch: " + bad.join(", "));
+      return bad.length === 0;
+    })(),
+  },
+  {
+    name: "metric numbers and their format are unchanged by the Spanish copy refresh",
+    pass:
+      ["<strong>20,000+</strong", "<strong>4.7/5</strong", "<strong>6,000</strong", "<strong>1,435M</strong", "<strong>20M</strong"].every((t) => indexHtml.includes(t)) &&
+      scriptJs.includes("scapder procesó 20,000+ registros") &&
+      /del 76% |desde 76% /.test(scriptJs) &&
+      scriptJs.includes("5 perfiles reales") &&
+      scriptJs.includes("seis mil clientes"),
+  },
 ];
 
 const failed = checks.filter((check) => !check.pass);
