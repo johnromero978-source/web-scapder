@@ -46,12 +46,12 @@ try {
     await scrollToEl(p, "#cases-title", 0.3);
     await p.waitForTimeout(280);
     const mid = await p.evaluate(() => { const h = document.querySelector("#cases-title"); const l = h.querySelector(".decode-layer"); const real = [...h.childNodes].filter((n) => n !== l).map((n) => n.textContent).join("").replace(/\s+/g, " ").trim(); return { decoding: h.classList.contains("is-decoding"), layer: l?.textContent.replace(/\s+/g, " ").trim(), real, fill: getComputedStyle(h).webkitTextFillColor, h: h.getBoundingClientRect().height }; });
-    ok(`${mode}: cases h2 mid-scramble (layer partially decoded, real text untouched)`, mid.decoding && mid.layer !== mid.real && mid.real === "Casos documentados en datos reales.", JSON.stringify(mid));
+    ok(`${mode}: cases h2 mid-scramble (layer partially decoded, real text untouched)`, mid.decoding && mid.layer !== mid.real && mid.real === "Casos documentados con datos reales.", JSON.stringify(mid));
     ok(`${mode}: accessible names == real text during scramble`, (await names(p, real)).every((n) => n === 1));
     await p.screenshot({ path: `${OUT}/${mode}-h2-mid-scramble.png` });
     await p.waitForTimeout(900);
     const done = await p.evaluate(() => { const h = document.querySelector("#cases-title"); return { decoding: h.classList.contains("is-decoding"), layer: !!h.querySelector(".decode-layer"), text: h.textContent.replace(/\s+/g, " ").trim(), h: h.getBoundingClientRect().height, fill: getComputedStyle(h).webkitTextFillColor }; });
-    ok(`${mode}: scramble completes with exact text and same box`, !done.decoding && !done.layer && done.text === "Casos documentados en datos reales." && Math.abs(done.h - box0.h) < 0.5, JSON.stringify(done));
+    ok(`${mode}: scramble completes with exact text and same box`, !done.decoding && !done.layer && done.text === "Casos documentados con datos reales." && Math.abs(done.h - box0.h) < 0.5, JSON.stringify(done));
     ok(`${mode}: accessible names == real text after`, (await names(p, real)).every((n) => n === 1));
 
     // metric scan
@@ -154,7 +154,7 @@ try {
     ok(`${mode}: no decode, line, reticle or armed metrics`, st.layers === 0 && st.decoding === 0 && st.line === 0 && st.reticle === 0 && st.armed === 0, JSON.stringify(st));
     await scrollToEl(p, "#cases-title", 0.15); await p.waitForTimeout(500);
     const vis = await p.evaluate(() => { const h = document.querySelector("#cases-title"); const m = document.querySelector(".case-metrics"); return { text: h.textContent.replace(/\s+/g, " ").trim(), fill: getComputedStyle(h).webkitTextFillColor, cover: getComputedStyle(m, "::before").content, op: getComputedStyle(m.querySelector("li")).opacity }; });
-    ok(`${mode}: headings and metrics in final state`, vis.text === "Casos documentados en datos reales." && vis.fill !== "rgba(0, 0, 0, 0)" && vis.cover === "none" && vis.op === "1", JSON.stringify(vis));
+    ok(`${mode}: headings and metrics in final state`, vis.text === "Casos documentados con datos reales." && vis.fill !== "rgba(0, 0, 0, 0)" && vis.cover === "none" && vis.op === "1", JSON.stringify(vis));
     await p.screenshot({ path: `${OUT}/${mode}-calm-cases.png` });
     await scrollToEl(p, "[data-edge-stage]", 0.2); await p.waitForTimeout(600);
     const r = await p.locator("[data-edge-stage]").boundingBox();
