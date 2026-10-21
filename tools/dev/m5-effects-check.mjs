@@ -7,7 +7,7 @@ const ok = (n, c, x = "") => { if (!c) fail++; console.log((c ? "PASS " : "FAIL 
 const clsInit = () => { window.__cls = 0; new PerformanceObserver((l) => { for (const e of l.getEntries()) if (!e.hadRecentInput) window.__cls += e.value; }).observe({ type: "layout-shift", buffered: true }); };
 const scrollToEl = (p, sel, frac = 0.35) => p.evaluate(([sel, frac]) => { const el = document.querySelector(sel); const r = el.getBoundingClientRect(); document.documentElement.style.scrollBehavior = "auto"; window.scrollTo(0, window.scrollY + r.top - innerHeight * frac); }, [sel, frac]);
 // real heading text without the decode layer
-const realTexts = (p) => p.evaluate(() => [...document.querySelectorAll(".hero .system-line, main section h2")].map((h) => { const c = h.cloneNode(true); c.querySelectorAll(".decode-layer").forEach((n) => n.remove()); return { id: h.id || "tagline", text: c.textContent.replace(/\s+/g, " ").trim() }; }));
+const realTexts = (p) => p.evaluate(() => [...document.querySelectorAll(".hero .system-line, main section h2")].map((h) => { const c = h.cloneNode(true); c.querySelectorAll(".decode-layer").forEach((n) => n.remove()); c.querySelectorAll(".heading-sentence").forEach((s) => s.append(" ")); return { id: h.id || "tagline", text: c.textContent.replace(/\s+/g, " ").trim() }; }));
 const names = async (p, list) => { const res = []; for (const { id, text } of list) { if (id === "tagline") continue; res.push(await p.getByRole("heading", { name: text, exact: true }).count()); } return res; };
 
 const b = await pw.chromium.launch({ headless: false, executablePath: "C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe" });
@@ -137,9 +137,13 @@ try {
       ok("mobile: no reticle on touch", await p.evaluate(() => !document.querySelector(".edge-reticle")));
     }
     // decode everything by scrolling through, then CLS
-    for (let y = 0; y < 14; y++) { await p.mouse.wheel(0, 700); await p.waitForTimeout(120); }
+    // read the page top to bottom (earlier steps jumped past some headings, which
+    // correctly stay encoded until seen); the page is much taller at 375 than at 1440
+    await p.evaluate(() => window.scrollTo(0, 0)); await p.waitForTimeout(300);
+    for (let y = 0; y < 60 && (await p.evaluate(() => scrollY < document.documentElement.scrollHeight - innerHeight - 2)); y++) { await p.mouse.wheel(0, 700); await p.waitForTimeout(120); }
     await p.waitForTimeout(1200);
-    ok(`${mode}: all headings resolved after scrolling through`, await p.evaluate(() => document.querySelectorAll(".decode-layer").length === 0));
+    const rest = await p.evaluate(() => ({ y: Math.round(scrollY), max: document.documentElement.scrollHeight - innerHeight, left: [...document.querySelectorAll(".is-decoding")].map((h) => h.id || h.className) }));
+    ok(`${mode}: all headings resolved after scrolling through`, rest.left.length === 0, JSON.stringify(rest));
     const cls = await p.evaluate(() => window.__cls);
     ok(`${mode}: CLS < 0.05`, cls < 0.05, cls.toFixed(4));
     ok(`${mode}: lite stayed off`, await p.evaluate(() => !document.documentElement.classList.contains("motion-lite")));
