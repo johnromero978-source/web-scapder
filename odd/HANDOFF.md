@@ -10,10 +10,11 @@ Live site (main `fc637b2`): Bandada, SEO, robot head-turn video scrub, scroll fi
 | `ad1fb99` | M5 effects pass "La señal de los datos": decoding headings, scroll signal line, metric scan, Edge Sight reticle, hover fills. | **WIP** — see below |
 | (this commit) | `tools/dev/` measurement helpers + this handoff | — |
 
-## Pending before publishing (M5)
-1. Accessible-name check for headings failed in the browser (3 checks) — likely the test, not confirmed. Check with DevTools > Accessibility that each h2's name equals its real text during and after the scramble.
-2. Not yet run: 375 touch, motion-lite, reduced motion, no-JS, scroll smoothness at 1440 (target ≤ 3% frames > 20 ms), impeccable detector.
-3. Review screenshots/visual quality; then the user decides on push/PR/merge.
+## Pending before publishing (M5) — updated 2026-10-21
+1. ~~Accessible-name check~~ DONE: it was a test bug, the AX names are correct.
+2. ~~375 touch, lite, reduced, no-JS~~ DONE, all green. Scroll smoothness at normal CPU: target met (1-3%). **Still open:** desktop CPU 4x is inconclusive (base 11-14% vs M5 9-21%); re-measure with more runs.
+3. Not yet run: impeccable detector (baseline 27).
+4. Review screenshots/visual quality; then the user decides on push/PR/merge.
 Details and exact next steps: `odd/tasks/purposeful-motion.md` (M4, E1, M5 entries).
 
 ## How to test locally
