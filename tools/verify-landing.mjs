@@ -1223,7 +1223,8 @@ const checks = [
             html.includes(`<meta name="twitter:description" content="${escAttr(d.metaDescription)}" />`) &&
             html.includes(`"description": ${JSON.stringify(d.metaDescription)}`) &&
             (html.match(/property="og:locale:alternate"/g) || []).length === 2 &&
-            !html.includes('href="https://scapder.com/" />\n    <link rel="icon"')
+            // The Spanish canonical must not survive; matched without line breaks so CRLF and LF checkouts agree.
+            !html.includes('<link rel="canonical" href="https://scapder.com/" />')
           );
         })(),
       },
