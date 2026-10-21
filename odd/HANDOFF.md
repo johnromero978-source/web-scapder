@@ -1,4 +1,4 @@
-# Handoff — 2026-10-21 (main `e4962d3`, everything is live)
+# Handoff — 2026-10-21 (main `242bc7a`, everything is live)
 
 Live on scapder.com. Nothing is waiting on a branch.
 
@@ -12,6 +12,7 @@ Live on scapder.com. Nothing is waiting on a branch.
 | #12 | `d51ca8e` | Metric numbers in each language's format: ES per RAE (`20 000+`, `6000`, `1435 M`), PT-BR (`20.000+`, `4,7/5`, `1,435 bi`), EN unchanged. |
 | #13 | `e138155` | Removed unused keys `contactEmailLabel` and `contactWhatsAppLabel`; the verifier fails on any unread key. Fixed the canonical check, which depended on line endings (false fail on LF checkouts, no-op on CRLF). |
 | #14 | `e4962d3` | The H1 says what scapder does: wordmark plus a smaller descriptor line taken from the meta titles. |
+| #16 | `242bc7a` | The Pages workflow runs `tools/verify-landing.mjs` before uploading; a failing check stops the deploy. |
 
 Details per feature: `odd/tasks/purposeful-motion.md`, `es-copy-refresh.md`, `en-pt-copy-refresh.md`, `language-urls.md`, `metric-number-format.md`, `descriptive-h1.md`.
 
@@ -29,7 +30,7 @@ Accepted, not pending: M5 costs ~3 points more slow frames than before at deskto
 ## How to test locally
 1. `node tools/build-language-pages.mjs .` (writes the gitignored `en/` and `pt/`)
 2. `node tools/dev/serve-range.mjs`, then open http://localhost:8766, `/en/` or `/pt/` (Range support is required for the videos).
-3. Verifier: `node tools/verify-landing.mjs` (106 checks, green). Browser helpers: `tools/dev/` (needs `playwright-core` in a scratch folder; see its README).
+3. Verifier: `node tools/verify-landing.mjs` (107 checks, green; the Pages workflow runs it before every deploy and stops on failure). Browser helpers: `tools/dev/` (needs `playwright-core` in a scratch folder; see its README).
 4. Verifier changes: also run them on an LF worktree (`git -c core.autocrlf=false worktree add <dir> main --detach`), since this Windows clone checks out CRLF and CI does not.
 
 ## Accounts / rules
