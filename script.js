@@ -20,6 +20,7 @@ const translations = {
 		ctaPortfolio: "Ver portafolio",
 		heroSystem: "Your Data has a Voice",
 		heroTitle: "scapder",
+		heroDescriptor: "inteligencia accionable desde datos reales",
 		heroLead:
 			"Transformamos datos complejos en inteligencia accionable para que equipos, operaciones y productos tomen mejores decisiones con modelos de IA aplicados al mundo real.",
 		heroPanelKicker: "Transformar datos en inteligencia accionable",
@@ -211,6 +212,7 @@ const translations = {
 		ctaPortfolio: "View portfolio",
 		heroSystem: "Your Data has a Voice",
 		heroTitle: "scapder",
+		heroDescriptor: "actionable intelligence from real data",
 		heroLead:
 			"We transform complex data into actionable intelligence so teams, operations, and products can make better decisions with AI models applied to the real world.",
 		heroPanelKicker: "Turning data into actionable intelligence",
@@ -401,6 +403,7 @@ const translations = {
 		ctaPortfolio: "Ver portfólio",
 		heroSystem: "Your Data has a Voice",
 		heroTitle: "scapder",
+		heroDescriptor: "inteligência acionável a partir de dados reais",
 		heroLead:
 			"Transformamos dados complexos em inteligência acionável para que equipes, operações e produtos tomem melhores decisões com modelos de IA aplicados ao mundo real.",
 		heroPanelKicker: "Transformar dados em inteligência acionável",

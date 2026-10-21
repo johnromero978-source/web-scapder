@@ -54,7 +54,27 @@ const checks = [
   },
   {
     name: "lowercase scapder branding in visible core copy",
-    pass: indexHtml.includes('<h1 id="hero-title" data-i18n="heroTitle">scapder</h1>'),
+    pass: indexHtml.includes(
+      '<h1 id="hero-title"><span class="hero-wordmark" data-i18n="heroTitle">scapder</span> <span class="hero-descriptor" data-i18n="heroDescriptor">inteligencia accionable desde datos reales</span></h1>',
+    ),
+  },
+  {
+    name: "hero H1 carries a descriptor in es, en and pt (index, generated pages, styles)",
+    pass: (() => {
+      const want = {
+        es: "inteligencia accionable desde datos reales",
+        en: "actionable intelligence from real data",
+        pt: "inteligência acionável a partir de dados reais",
+      };
+      const h1Of = (html) => /<h1 id="hero-title"[^>]*>([\s\S]*?)<\/h1>/.exec(html)?.[1] ?? "";
+      return (
+        Object.entries(want).every(([lang, text]) => loadDictionary(lang).heroDescriptor === text) &&
+        h1Of(indexHtml).includes(want.es) &&
+        h1Of(generated.pages.en ?? "").includes(want.en) &&
+        h1Of(generated.pages.pt ?? "").includes(want.pt) &&
+        read("styles.css").includes(".hero-descriptor")
+      );
+    })(),
   },
   {
     name: "header brand is the monochrome scapder wordmark",
