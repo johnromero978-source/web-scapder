@@ -576,7 +576,7 @@ const translations = {
 	},
 };
 
-function applyLanguage(lang) {
+function applyLanguage(lang, { persist = true } = {}) {
 	const dictionary = translations[lang] || translations.es;
 	document.documentElement.lang = lang === "pt" ? "pt-BR" : lang;
 	document.title = dictionary.metaTitle;
@@ -586,7 +586,8 @@ function applyLanguage(lang) {
 
 	document.querySelectorAll("[data-i18n]").forEach((node) => {
 		const key = node.getAttribute("data-i18n");
-		if (dictionary[key]) {
+		// /en/ and /pt/ ship already translated: leave identical text untouched.
+		if (dictionary[key] && node.textContent !== dictionary[key]) {
 			node.textContent = dictionary[key];
 		}
 	});
@@ -618,7 +619,9 @@ function applyLanguage(lang) {
 		button.setAttribute("aria-pressed", String(isActive));
 	});
 
-	window.localStorage.setItem("scapder-language", lang);
+	if (persist) {
+		window.localStorage.setItem("scapder-language", lang);
+	}
 
 	syncBandada(lang);
 	document.dispatchEvent(new CustomEvent("scapder:language", { detail: lang }));
@@ -634,8 +637,8 @@ function bandadaUrl(lang) {
 }
 
 function currentLanguage() {
-	const lang = window.localStorage.getItem("scapder-language");
-	return lang === "en" || lang === "pt" ? lang : "es";
+	const lang = document.documentElement.lang;
+	return lang.startsWith("pt") ? "pt" : lang === "en" ? "en" : "es";
 }
 
 function mountBandada() {
@@ -673,12 +676,47 @@ function syncBandada(lang) {
 	}
 }
 
-const savedLanguage = window.localStorage.getItem("scapder-language");
-applyLanguage(savedLanguage === "en" || savedLanguage === "pt" ? savedLanguage : "es");
+// ── Language URLs ──
+//
+// / is Spanish, /en/ English, /pt/ Brazilian Portuguese. The generated /en/ and
+// /pt/ pages are already translated, so the path always decides there (and is not
+// written to the saved choice: opening a shared link must not change the visitor's
+// preference). On / the saved choice still applies, as before.
+const LANGUAGE_PATHS = { es: "/", en: "/en/", pt: "/pt/" };
+
+const pathLanguage = (() => {
+	const match = /^\/(en|pt)(?:\/|$)/.exec(window.location.pathname);
+	return match ? match[1] : null;
+})();
+
+// Keeps the address in step with the chosen language without a navigation.
+function syncLanguageUrl(lang) {
+	if (window.location.protocol === "file:" || !window.history || !window.history.replaceState) {
+		return;
+	}
+	const target = LANGUAGE_PATHS[lang] || "/";
+	if (window.location.pathname === target) {
+		return;
+	}
+	try {
+		window.history.replaceState(window.history.state, "", target + window.location.search + window.location.hash);
+	} catch {
+		// Sandboxed or unusual origins may refuse; the language switch itself still works.
+	}
+}
+
+if (pathLanguage) {
+	applyLanguage(pathLanguage, { persist: false });
+} else {
+	const savedLanguage = window.localStorage.getItem("scapder-language");
+	applyLanguage(savedLanguage === "en" || savedLanguage === "pt" ? savedLanguage : "es");
+}
 
 document.querySelectorAll(".language-option").forEach((button) => {
 	button.addEventListener("click", () => {
-		applyLanguage(button.dataset.lang === "en" || button.dataset.lang === "pt" ? button.dataset.lang : "es");
+		const lang = button.dataset.lang === "en" || button.dataset.lang === "pt" ? button.dataset.lang : "es";
+		applyLanguage(lang);
+		syncLanguageUrl(lang);
 	});
 });
 
@@ -1768,7 +1806,7 @@ function turnHeroHead() {
 			focusing.map((animation) => animation.finished.catch(() => undefined)),
 		);
 
-		video.src = "img/hero/gaze.mp4";
+		video.src = "/img/hero/gaze.mp4";
 		video.load();
 
 		// Start on frame 0 (the photo) before the video becomes visible.
@@ -2034,7 +2072,7 @@ function initEdgeSightDemo(stage) {
 	};
 
 	const loadTracks = () => {
-		fetch("img/edgesight/edgesight-tracks.json")
+		fetch("/img/edgesight/edgesight-tracks.json")
 			.then((response) => response.json())
 			.then((data) => {
 				tracks = data;

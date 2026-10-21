@@ -24,11 +24,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
       - name: Prepare public artifact
         run: |
           mkdir public
           cp index.html styles.css script.js robots.txt sitemap.xml favicon.ico favicon-32.png apple-touch-icon.png .nojekyll public/
           cp -R img public/img
+          node tools/build-language-pages.mjs public
 
       - name: Setup Pages
         uses: actions/configure-pages@v6

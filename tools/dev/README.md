@@ -15,3 +15,5 @@ Setup: `npm i -D playwright-core` in a scratch folder (or here, without committi
 in a short path (Windows MAX_PATH breaks torch installs in long paths), e.g. `~/.venvs/scapder-cv`.
 Some scripts still reference paths from the original session; adjust before running.
 Close every browser after each run (they are RAM-heavy).
+
+Before serving locally, build the `/en/` and `/pt/` pages with `node tools/build-language-pages.mjs .` and then `node tools/dev/serve-range.mjs` (the folders are gitignored).
