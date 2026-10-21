@@ -165,6 +165,22 @@ const checks = [
     })(),
   },
   {
+    // The reverse: a key nothing reads is dead copy that still gets translated.
+    name: "every dictionary key is read by the page or by script.js",
+    pass: (() => {
+      let code = scriptJs;
+      for (const lang of ["es", "en", "pt"]) {
+        const start = code.indexOf(`\t${lang}: {`);
+        code = code.slice(0, start) + code.slice(code.indexOf("\n\t},", start));
+      }
+      const unused = Object.keys(loadDictionary("es")).filter(
+        (key) => !indexHtml.includes(`"${key}"`) && !new RegExp(`\\b${key}\\b`).test(code),
+      );
+      if (unused.length) console.error("unused dictionary keys:", unused.join(", "));
+      return unused.length === 0;
+    })(),
+  },
+  {
     name: "Edge Sight comparison slider hooks exist",
     pass:
       indexHtml.includes('data-comparison') &&
