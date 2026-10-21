@@ -995,13 +995,43 @@ const checks = [
     })(),
   },
   {
-    name: "metric numbers and their format are unchanged by the Spanish copy refresh",
+    name: "metric figures keep their values and the Spanish copy refresh claims",
     pass:
-      ["<strong>20,000+</strong", "<strong>4.7/5</strong", "<strong>6,000</strong", "<strong>1,435M</strong", "<strong>20M</strong"].every((t) => indexHtml.includes(t)) &&
-      scriptJs.includes("scapder procesó 20,000+ registros") &&
+      ["<strong>300</strong", "<strong>5</strong", "<strong>5%</strong", "<strong>15</strong", "<strong>100%</strong"].every((t) => indexHtml.includes(t)) &&
       /del 76% |desde 76% /.test(scriptJs) &&
       scriptJs.includes("5 perfiles reales") &&
       scriptJs.includes("seis mil clientes"),
+  },
+  {
+    // Each language writes its metric numbers its own way; U+00A0 keeps a figure on one line.
+    name: "metric numbers use each language's own format (es, en, pt-BR), as real text",
+    pass: (() => {
+      const nb = "\u00a0";
+      const table = {
+        caseCeleusM1Strong: { es: `20${nb}000+`, en: "20,000+", pt: "20.000+" },
+        caseLegisM2Strong: { es: "4.7/5", en: "4.7/5", pt: "4,7/5" },
+        caseLegisM3Strong: { es: "4.4/5", en: "4.4/5", pt: "4,4/5" },
+        casePuppisM2Strong: { es: "6000", en: "6,000", pt: "6.000" },
+        caseCanalM1Strong: { es: `1435${nb}M`, en: "1,435M", pt: `1,435${nb}bi` },
+        caseCanalM2Strong: { es: `20${nb}M`, en: "20M", pt: `20${nb}mi` },
+      };
+      const dicts = { es: loadDictionary("es"), en: loadDictionary("en"), pt: loadDictionary("pt") };
+      const pages = { es: indexHtml, en: generated.pages.en || "", pt: generated.pages.pt || "" };
+      const bad = [];
+      for (const [key, values] of Object.entries(table)) {
+        for (const lang of ["es", "en", "pt"]) {
+          const v = values[lang];
+          if (dicts[lang][key] !== v) bad.push(`dict ${lang}.${key}`);
+          const tag = new RegExp(`<strong data-i18n="${key}">([^<]*)</strong`);
+          const m = pages[lang].match(tag);
+          if (!m || m[1] !== escText(v)) bad.push(`page ${lang}.${key}`);
+        }
+      }
+      if (!dicts.es.caseCeleusCopy.includes(`scapder procesó más de 20${nb}000 registros con 300`)) bad.push("es celeus copy in script.js");
+      if (!indexHtml.includes(`scapder procesó más de 20${nb}000 registros con 300`)) bad.push("es celeus copy in index.html");
+      if (bad.length) console.error("metric format: " + bad.join(", "));
+      return bad.length === 0;
+    })(),
   },
   {
     name: "English dictionary has no Spanish calques, Title Case labels or symbols in running text",

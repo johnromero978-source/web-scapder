@@ -54,7 +54,8 @@ const translations = {
 		caseCeleusDomain: "Inmobiliario y construcción",
 		caseCeleusTitle: "Priorizar clientes potenciales con probabilidad científica.",
 		caseCeleusCopy:
-			"scapder procesó 20,000+ registros con 300 variables de comportamiento e identificó 5 perfiles reales de comprador mediante agrupamiento dinámico (clustering).",
+			"scapder procesó más de 20\u00a0000 registros con 300 variables de comportamiento e identificó 5 perfiles reales de comprador mediante agrupamiento dinámico (clustering).",
+		caseCeleusM1Strong: "20\u00a0000+",
 		caseCeleusM1: "registros procesados",
 		caseCeleusM2: "variables analizadas",
 		caseCeleusM3: "perfiles identificados",
@@ -63,13 +64,16 @@ const translations = {
 		caseLegisCopy:
 			"Algoritmos de aprendizaje automático contextual redujeron las búsquedas sin resultado del 76% a un mínimo operativo documentado.",
 		caseLegisM1: "búsquedas fallidas",
+		caseLegisM2Strong: "4.7/5",
 		caseLegisM2: "accesibilidad",
+		caseLegisM3Strong: "4.4/5",
 		caseLegisM3: "precisión de pertinencia",
 		casePuppisDomain: "Comercio minorista de mascotas",
 		casePuppisTitle: "Demanda geolocalizada sin necesidad de programar.",
 		casePuppisCopy:
 			"scapder convirtió datos técnicos complejos en interfaces visuales intuitivas y procesó seis mil clientes al mes.",
 		casePuppisM1: "listas exactas",
+		casePuppisM2Strong: "6000",
 		casePuppisM2: "clientes al mes",
 		casePuppisM3: "autonomía visual",
 		caseCanalName: "Canal de Panamá",
@@ -77,7 +81,9 @@ const translations = {
 		caseCanalTitle: "Predecir rutas dinámicas con inteligencia artificial.",
 		caseCanalCopy:
 			"Miles de millones de registros históricos y operativos se transformaron en enrutamiento inteligente y trayectorias dinámicas seguras.",
+		caseCanalM1Strong: "1435\u00a0M",
 		caseCanalM1: "registros satelitales",
+		caseCanalM2Strong: "20\u00a0M",
 		caseCanalM2: "registros cada 15 min",
 		caseCanalM3Strong: "Óptimo",
 		caseCanalM3: "consumo en tránsito",
@@ -246,6 +252,7 @@ const translations = {
 		caseCeleusTitle: "Prioritizing prospects with scientific probability.",
 		caseCeleusCopy:
 			"scapder processed 20,000+ records across 300 behavioral variables and identified 5 real buyer profiles using dynamic clustering.",
+		caseCeleusM1Strong: "20,000+",
 		caseCeleusM1: "records processed",
 		caseCeleusM2: "variables analyzed",
 		caseCeleusM3: "profiles identified",
@@ -254,13 +261,16 @@ const translations = {
 		caseLegisCopy:
 			"Contextual machine learning algorithms reduced searches with no results from 76% to a documented operational minimum.",
 		caseLegisM1: "failed searches",
+		caseLegisM2Strong: "4.7/5",
 		caseLegisM2: "accessibility",
+		caseLegisM3Strong: "4.4/5",
 		caseLegisM3: "relevance precision",
 		casePuppisDomain: "Pet retail",
 		casePuppisTitle: "Geolocated demand without coding.",
 		casePuppisCopy:
 			"scapder turned complex technical data into intuitive visual interfaces and processed 6,000 clients per month.",
 		casePuppisM1: "exact lists",
+		casePuppisM2Strong: "6,000",
 		casePuppisM2: "clients per month",
 		casePuppisM3: "visual autonomy",
 		caseCanalName: "Panama Canal",
@@ -268,7 +278,9 @@ const translations = {
 		caseCanalTitle: "Predicting dynamic routes with artificial intelligence.",
 		caseCanalCopy:
 			"Billions of historical and operational records were transformed into intelligent routing and safe dynamic trajectories.",
+		caseCanalM1Strong: "1,435M",
 		caseCanalM1: "satellite records",
+		caseCanalM2Strong: "20M",
 		caseCanalM2: "records every 15 min",
 		caseCanalM3Strong: "Optimal",
 		caseCanalM3: "fuel consumption in transit",
@@ -436,6 +448,7 @@ const translations = {
 		caseCeleusTitle: "Priorizar clientes potenciais com probabilidade científica.",
 		caseCeleusCopy:
 			"A scapder processou mais de 20 mil registros com 300 variáveis de comportamento e identificou cinco perfis reais de comprador por meio de agrupamento dinâmico (clustering).",
+		caseCeleusM1Strong: "20.000+",
 		caseCeleusM1: "registros processados",
 		caseCeleusM2: "variáveis analisadas",
 		caseCeleusM3: "perfis identificados",
@@ -444,13 +457,16 @@ const translations = {
 		caseLegisCopy:
 			"Algoritmos de aprendizado de máquina contextual reduziram as buscas sem resultado de 76% para um mínimo operacional documentado.",
 		caseLegisM1: "buscas sem resultado",
+		caseLegisM2Strong: "4,7/5",
 		caseLegisM2: "acessibilidade",
+		caseLegisM3Strong: "4,4/5",
 		caseLegisM3: "precisão de relevância",
 		casePuppisDomain: "Varejo pet",
 		casePuppisTitle: "Demanda geolocalizada sem precisar programar.",
 		casePuppisCopy:
 			"A scapder converteu dados técnicos complexos em interfaces visuais intuitivas e processou seis mil clientes por mês.",
 		casePuppisM1: "listas exatas",
+		casePuppisM2Strong: "6.000",
 		casePuppisM2: "clientes por mês",
 		casePuppisM3: "autonomia visual",
 		caseCanalName: "Canal do Panamá",
@@ -458,7 +474,9 @@ const translations = {
 		caseCanalTitle: "Prever rotas dinâmicas com inteligência artificial.",
 		caseCanalCopy:
 			"Bilhões de registros históricos e operacionais foram transformados em roteamento inteligente e trajetórias dinâmicas seguras.",
+		caseCanalM1Strong: "1,435\u00a0bi",
 		caseCanalM1: "registros de satélite",
+		caseCanalM2Strong: "20\u00a0mi",
 		caseCanalM2: "registros a cada 15 min",
 		caseCanalM3Strong: "Ótimo",
 		caseCanalM3: "consumo em trânsito",
