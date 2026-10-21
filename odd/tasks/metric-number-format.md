@@ -30,7 +30,7 @@ The metric tiles are hard-coded in English format for every language. In ES and 
 
 ## Tasks
 - [x] N1 Translation keys and per-language values for the metric numbers, ES copy, verifier checks (RED first), generated EN/PT pages carry the right values. Route: delegated writer (index.html, script.js, verifier, dev check: several non-trivial files).
-- [ ] N2 Browser check: `/`, `/en/`, `/pt/` show the table's values, the language switch updates them, no wrap or overflow at 375. Route: parent (inline).
+- [x] N2 Browser check: `/`, `/en/`, `/pt/` show the table's values, the language switch updates them, no wrap or overflow at 375. Route: parent (inline).
 
 ## Acceptance
 - Each language shows exactly the values in the Design table, before JS (generated pages) and after switching.
@@ -42,3 +42,5 @@ The metric tiles are hard-coded in English format for every language. In ES and 
 ## Progress
 - 2026-10-21: branch `feat/metric-number-format` from main `dc04f76`.
 - 2026-10-21 N1 (delegated writer): RED observed before implementing: check "metric numbers use each language's own format (es, en, pt-BR), as real text" failed (all 18 dict/page cells plus ES Celeus copy). GREEN: `node tools/verify-landing.mjs` passed (104 checks, old format check split into a values check plus the new per-language check), `node --check script.js` OK, `node tools/build-language-pages.mjs .` OK; generated en/ and pt/ carry the table values with U+00A0 where required. `tools/dev/m5-effects-check.mjs` expectation updated to `20 000+|300|5` (not run, needs a browser). Files: index.html, script.js, tools/verify-landing.mjs, tools/dev/m5-effects-check.mjs. Not committed.
+- 2026-10-21 N1 committed `b302159`.
+- 2026-10-21 N2 (parent, inline). Headless Brave on the local build (scratchpad n2.mjs): `/`, `/en/`, `/pt/` show the exact Design-table values with JS off (generated HTML) and on; selector switch es -> en -> pt -> es updates them; at 375 no horizontal scroll and no wrapped or overflowing number. Screenshots of the Canal tiles after the metric scan read "1435 M / 20 M" (ES) and "1,435 bi / 20 mi" (PT). `tools/dev/m5-effects-check.mjs` not run.
