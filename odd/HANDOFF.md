@@ -14,12 +14,12 @@ Live site (main `fc637b2`): Bandada, SEO, robot head-turn video scrub, scroll fi
 1. ~~Accessible-name check~~ DONE: it was a test bug, the AX names are correct.
 2. ~~375 touch, lite, reduced, no-JS~~ DONE, all green. Scroll smoothness at normal CPU: target met (1-3%). Desktop CPU 4x: the signal line's forced layout (scrollY read per frame) was fixed 2026-10-21 in `f25d006` (CSS scroll timeline + IntersectionObserver); M5 is now ~3 points above base (17.8 vs 16.4% median, 10 pairs), accepted by the owner.
 3. ~~Impeccable detector~~ DONE 2026-10-21: 27 findings, identical to base.
-4. ~~Screenshots~~ reviewed 2026-10-21. Open: header bleed (pre-existing, proof strip text shows through the sticky header at 375). Then the user decides on push/PR/merge.
+4. ~~Screenshots~~ reviewed 2026-10-21; header bleed (pre-existing) fixed with an opaque sticky header. Next: the user decides on push/PR/merge.
 Details and exact next steps: `odd/tasks/purposeful-motion.md` (M4, E1, M5 entries).
 
 ## How to test locally
 `node tools/dev/serve-range.mjs` then open http://localhost:8766 (Range support is required for the videos).
-Verifier: `node tools/verify-landing.mjs` (76 checks, green).
+Verifier: `node tools/verify-landing.mjs` (77 checks, green).
 
 ## Accounts / rules
 Push/PR with the `johnromero978-source` account (`~/.gh-personal/bin/gits` / `ghs`), never switch the global gh (johnromero-613). Higgsfield credits used today on this branch: ~18 (Edge Sight).
