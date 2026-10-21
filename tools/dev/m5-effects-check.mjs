@@ -58,7 +58,7 @@ try {
     await scrollToEl(p, ".case-card .case-metrics", 0.6);
     await p.waitForTimeout(330);
     const scan = await p.evaluate(() => { const c = document.querySelector(".case-card"); const ul = c.querySelector(".case-metrics"); const t = getComputedStyle(ul, "::before").transform; return { inn: c.classList.contains("metrics-in"), t, nums: [...ul.querySelectorAll("strong")].map((s) => s.textContent) }; });
-    ok(`${mode}: metric scan running (cover mid-sweep), numbers are real text`, scan.inn && scan.t !== "none" && scan.nums.join("|") === "20,000+|300|5", JSON.stringify(scan));
+    ok(`${mode}: metric scan running (cover mid-sweep), numbers are real text`, scan.inn && scan.t !== "none" && scan.nums.join("|") === "20\u00a0000+|300|5", JSON.stringify(scan));
     await p.locator(".case-card").first().screenshot({ path: `${OUT}/${mode}-metric-mid-scan.png` });
     await p.waitForTimeout(900);
     const scanDone = await p.evaluate(() => { const c = document.querySelector(".case-card"); return { done: c.classList.contains("metrics-done"), before: getComputedStyle(c.querySelector(".case-metrics"), "::before").content }; });
